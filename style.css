@@ -428,3 +428,38 @@ button:active {
         transform: translate(-50%, -50%) scale(1);
     }
 }
+
+/* Minimized state for UI during chase */
+.ui-panel.minimized {
+    padding: 15px;
+    min-width: auto;
+    width: auto;
+    transform: scale(0.8);
+    transform-origin: top left;
+    background: rgba(26, 26, 46, 0.6); /* More transparent */
+}
+
+.ui-panel.minimized .instructions {
+    display: none;
+}
+
+.ui-panel.minimized #start-chase {
+    display: none;
+}
+
+.ui-panel.minimized .controls {
+    margin: 10px 0;
+}
+
+.ui-panel.minimized .score,
+.ui-panel.minimized .combo,
+.ui-panel.minimized .excitement {
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+.ui-panel.minimized .score span,
+.ui-panel.minimized .combo span,
+.ui-panel.minimized .excitement span {
+    font-size: 18px;
+}
