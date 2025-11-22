@@ -689,6 +689,13 @@ class AmazingApp {
         this.gameState.score = 0;
         this.gameState.combo = 0;
         this.gameState.excitement = 0;
+
+        // Minimize UI during chase
+        const uiPanel = document.querySelector('.ui-panel');
+        if (uiPanel) {
+            uiPanel.classList.add('minimized');
+        }
+
         this.updateUI();
         
         if (this.monster) {
