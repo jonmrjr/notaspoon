@@ -56,6 +56,7 @@ class AmazingApp {
         this.createEnvironment();
         this.createControls();
         this.createUI();
+        this.createTargetMarker();
         await this.loadModels();
         this.createLightCircles();
         this.initSoundSystem();
@@ -220,11 +221,11 @@ class AmazingApp {
             opacity: 0.8
         });
         
-        const ground = new THREE.Mesh(groundGeometry, groundMaterial);
-        ground.rotation.x = -Math.PI / 2;
-        ground.position.y = -0.02;
-        ground.receiveShadow = true;
-        this.scene.add(ground);
+        this.ground = new THREE.Mesh(groundGeometry, groundMaterial);
+        this.ground.rotation.x = -Math.PI / 2;
+        this.ground.position.y = -0.02;
+        this.ground.receiveShadow = true;
+        this.scene.add(this.ground);
     }
 
     createSkyBackground() {
@@ -471,6 +472,20 @@ class AmazingApp {
         }
     }
 
+    createTargetMarker() {
+        const geometry = new THREE.RingGeometry(0.3, 0.5, 32);
+        const material = new THREE.MeshBasicMaterial({
+            color: 0xffffff,
+            transparent: true,
+            opacity: 0.8,
+            side: THREE.DoubleSide
+        });
+        this.targetMarker = new THREE.Mesh(geometry, material);
+        this.targetMarker.rotation.x = -Math.PI / 2;
+        this.targetMarker.visible = false;
+        this.scene.add(this.targetMarker);
+    }
+
     createLightCircles() {
         // Monster light circle (red/purple)
         const monsterCircleGeometry = new THREE.RingGeometry(1.5, 2.2, 32);
@@ -681,6 +696,43 @@ class AmazingApp {
         window.addEventListener('mousemove', (event) => {
             this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
             this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        });
+
+        // Click interaction for bunny movement
+        window.addEventListener('pointerdown', (event) => {
+            // Update mouse coordinates for raycaster
+            this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            this.raycaster.setFromCamera(this.mouse, this.camera);
+
+            if (this.ground) {
+                const intersects = this.raycaster.intersectObject(this.ground);
+
+                if (intersects.length > 0) {
+                    const point = intersects[0].point;
+
+                    if (this.bunny) {
+                        this.bunny.userData.targetPosition.copy(point);
+                        this.bunny.userData.lastUserInteractionTime = this.clock.getElapsedTime();
+
+                        // Show marker
+                        if (this.targetMarker) {
+                            this.targetMarker.position.copy(point);
+                            this.targetMarker.position.y = 0.05;
+                            this.targetMarker.visible = true;
+
+                            if (this.targetMarkerTimeout) clearTimeout(this.targetMarkerTimeout);
+                            this.targetMarkerTimeout = setTimeout(() => {
+                                this.targetMarker.visible = false;
+                            }, 1000);
+                        }
+
+                        this.createSparkleEffect(point);
+                        console.log("User interaction at:", point);
+                    }
+                }
+            }
         });
     }
 
@@ -902,8 +954,11 @@ class AmazingApp {
         });
 
         if (this.bunny && this.bunny.userData) { // Check bunny and its userData exists
-            // Bunny random movement logic
-            if (Math.random() < 0.015) { // Adjust probability for target change frequency
+            const timeSinceInteraction = time - (this.bunny.userData.lastUserInteractionTime || 0);
+            const isUserControlled = timeSinceInteraction < 3.0;
+
+            // Bunny random movement logic (only if not user controlled)
+            if (!isUserControlled && Math.random() < 0.015) { // Adjust probability for target change frequency
                 this.bunny.userData.targetPosition.set(
                     (Math.random() - 0.5) * 16,  // x range (-8 to +8)
                     this.bunny.userData.originalPosition.y, // Base Y for bobbing
@@ -1087,5 +1142,5 @@ class AmazingApp {
 
 // Initialize the amazing app
 window.addEventListener('load', () => {
-    new AmazingApp();
+    window.app = new AmazingApp();
 });

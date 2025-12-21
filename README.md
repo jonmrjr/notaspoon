@@ -64,9 +64,9 @@ Here's a suggested roadmap for the next 5 iterations of the "Monster Chase Game"
     *   Increase the detail of the 3D bunny model (e.g., more vertices, refined shape for a more realistic look).
     *   Improve its appearance through shader enhancements (e.g., more sophisticated material properties like specular highlights).
 
-3.  **Iteration 3: Enhance User Interaction**
+3.  **Iteration 3: Enhance User Interaction** - Done ✓
     *   Implement basic camera controls (e.g., zoom with mouse wheel, orbit/pan with mouse drag).
-    *   Add interactive elements for the chase scene.
+    *   Add interactive elements for the chase scene (Click-to-Move for Bunny).
 
 4.  **Iteration 4: Advanced Lighting & Basic Environment Mapping**
     *   Improve the lighting model: explore adding multiple light sources, different types of lights (point, directional, spot), or shadows if feasible.
