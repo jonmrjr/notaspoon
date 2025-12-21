@@ -5,6 +5,7 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { SimplexNoise } from './noise.js';
 
 class AmazingApp {
     constructor() {
@@ -43,6 +44,7 @@ class AmazingApp {
         this.clock = new THREE.Clock();
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
+        this.noise = new SimplexNoise();
         
         this.init();
     }
@@ -184,6 +186,9 @@ class AmazingApp {
     }
 
     createEnvironment() {
+        // Create uneven terrain
+        this.createTerrain();
+
         // Create procedural grass field
         this.createProceduralGrass();
         
@@ -194,18 +199,92 @@ class AmazingApp {
         this.createBackgroundElements();
     }
 
+    getTerrainHeight(x, z) {
+        // Base terrain noise
+        let height = this.noise.noise2D(x * 0.05, z * 0.05) * 2;
+        // Detailed noise
+        height += this.noise.noise2D(x * 0.2, z * 0.2) * 0.5;
+
+        // Flatten center area for gameplay
+        const dist = Math.sqrt(x*x + z*z);
+        if (dist < 8) {
+            height *= THREE.MathUtils.smoothstep(dist, 0, 8) * 0.2; // Smoothly flatten
+        }
+
+        return height;
+    }
+
+    createTerrain() {
+        const size = 60;
+        const segments = 100;
+        const geometry = new THREE.PlaneGeometry(size, size, segments, segments);
+
+        const positionAttribute = geometry.attributes.position;
+        const colors = [];
+        const colorAttr = new THREE.BufferAttribute(new Float32Array(positionAttribute.count * 3), 3);
+
+        const grassColor = new THREE.Color(0x4a7c2a);
+        const rockColor = new THREE.Color(0x5a4d41);
+        const dirtColor = new THREE.Color(0x3d2918);
+
+        for (let i = 0; i < positionAttribute.count; i++) {
+            const x = positionAttribute.getX(i);
+            const z = positionAttribute.getY(i); // Plane is laid out X, Y, but we rotate it later
+
+            // Note: Since we rotate X by -PI/2, the Y of the geometry becomes Z in world space
+            // And Z of geometry becomes Y (height) in world space
+            // We pass -z to match the world coordinate system where +Z is towards the camera
+            // but the rotated plane's +Y points to world -Z
+            const height = this.getTerrainHeight(x, -z);
+
+            positionAttribute.setZ(i, height);
+
+            // Slope calculation for coloring
+            // Simple approximation using height
+            let color = grassColor.clone();
+
+            if (height > 1.5) {
+                // Higher areas are rockier
+                color.lerp(rockColor, (height - 1.5) / 2);
+            } else if (height < -0.5) {
+                // Lower areas might be dirtier
+                color.lerp(dirtColor, 0.5);
+            }
+
+            colors.push(color.r, color.g, color.b);
+        }
+
+        geometry.computeVertexNormals();
+        geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+
+        const material = new THREE.MeshStandardMaterial({
+            vertexColors: true,
+            roughness: 0.8,
+            metalness: 0.1,
+            side: THREE.DoubleSide
+        });
+
+        this.ground = new THREE.Mesh(geometry, material);
+        this.ground.rotation.x = -Math.PI / 2;
+        this.ground.receiveShadow = true;
+        this.scene.add(this.ground);
+    }
+
     createProceduralGrass() {
         // Create grass field with instanced geometry for performance
         const grassBladeGeometry = new THREE.PlaneGeometry(0.1, 0.3);
+        // Translate geometry so origin is at bottom
+        grassBladeGeometry.translate(0, 0.15, 0);
+
         const grassMaterial = new THREE.MeshLambertMaterial({
             color: 0x4a7c2a,
             side: THREE.DoubleSide,
             transparent: true,
-            opacity: 0.8
+            opacity: 0.9
         });
 
         // Create grass instances
-        const grassCount = 2000;
+        const grassCount = 8000;
         const grassField = new THREE.InstancedMesh(grassBladeGeometry, grassMaterial, grassCount);
         
         const matrix = new THREE.Matrix4();
@@ -215,14 +294,18 @@ class AmazingApp {
 
         for (let i = 0; i < grassCount; i++) {
             // Random position across the field
-            position.set(
-                (Math.random() - 0.5) * 30,
-                0,
-                (Math.random() - 0.5) * 30
-            );
+            const x = (Math.random() - 0.5) * 50;
+            const z = (Math.random() - 0.5) * 50;
+            const y = this.getTerrainHeight(x, z);
+
+            position.set(x, y, z);
 
             // Random rotation
-            rotation.set(0, Math.random() * Math.PI * 2, 0);
+            rotation.set(
+                (Math.random() - 0.5) * 0.2, // Slight tilt
+                Math.random() * Math.PI * 2,
+                (Math.random() - 0.5) * 0.2
+            );
 
             // Random scale for variety
             const scaleMultiplier = 0.5 + Math.random() * 1.5;
@@ -239,20 +322,6 @@ class AmazingApp {
 
         // Store reference for animation
         this.grassField = grassField;
-
-        // Create ground plane for shadows
-        const groundGeometry = new THREE.PlaneGeometry(50, 50);
-        const groundMaterial = new THREE.MeshLambertMaterial({
-            color: 0x2d4a1c,
-            transparent: true,
-            opacity: 0.8
-        });
-        
-        this.ground = new THREE.Mesh(groundGeometry, groundMaterial);
-        this.ground.rotation.x = -Math.PI / 2;
-        this.ground.position.y = -0.02;
-        this.ground.receiveShadow = true;
-        this.scene.add(this.ground);
     }
 
     createSkyBackground() {
@@ -271,24 +340,46 @@ class AmazingApp {
                 uniform float time;
                 varying vec3 vWorldPosition;
                 
+                // Simple noise function
+                float random(vec2 st) {
+                    return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+                }
+
+                float noise(vec2 st) {
+                    vec2 i = floor(st);
+                    vec2 f = fract(st);
+                    float a = random(i);
+                    float b = random(i + vec2(1.0, 0.0));
+                    float c = random(i + vec2(0.0, 1.0));
+                    float d = random(i + vec2(1.0, 1.0));
+                    vec2 u = f * f * (3.0 - 2.0 * f);
+                    return mix(a, b, u.x) + (c - a)* u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+                }
+
                 void main() {
                     vec3 direction = normalize(vWorldPosition);
                     float elevation = direction.y;
                     
-                    // Create gradient from horizon to zenith
-                    vec3 horizonColor = vec3(0.9, 0.6, 0.3);
-                    vec3 zenithColor = vec3(0.1, 0.3, 0.8);
+                    // Improved gradient
+                    vec3 horizonColor = vec3(0.5, 0.7, 0.9); // Light blue
+                    vec3 zenithColor = vec3(0.1, 0.3, 0.8); // Deep blue
+                    vec3 sunsetColor = vec3(0.9, 0.6, 0.3); // Orange
                     
                     // Add time-based color variation
-                    float timeOffset = sin(time * 0.1) * 0.1;
-                    horizonColor += timeOffset;
-                    zenithColor += timeOffset * 0.5;
+                    float dayTime = sin(time * 0.05); // Slow day cycle
+
+                    // Mix sunset color near horizon
+                    vec3 skyBase = mix(horizonColor, zenithColor, smoothstep(0.0, 0.5, elevation));
+                    skyBase = mix(skyBase, sunsetColor, smoothstep(-0.1, 0.2, elevation) * (0.5 + 0.5 * dayTime));
                     
-                    vec3 skyColor = mix(horizonColor, zenithColor, smoothstep(-0.2, 0.8, elevation));
+                    // Add procedural clouds
+                    float cloudNoise = noise(direction.xz * 3.0 + time * 0.05);
+                    cloudNoise += noise(direction.xz * 6.0 + time * 0.05) * 0.5;
                     
-                    // Add some cloud-like noise
-                    float noise = sin(direction.x * 10.0 + time * 0.2) * sin(direction.z * 10.0 + time * 0.15) * 0.1;
-                    skyColor += noise * vec3(1.0, 1.0, 1.0);
+                    // Soften clouds and limit to upper sky
+                    float cloudDensity = smoothstep(0.4, 0.8, cloudNoise) * smoothstep(0.0, 0.3, elevation);
+
+                    vec3 skyColor = mix(skyBase, vec3(1.0), cloudDensity * 0.8);
                     
                     gl_FragColor = vec4(skyColor, 1.0);
                 }
@@ -305,6 +396,12 @@ class AmazingApp {
     }
 
     createBackgroundElements() {
+        // Create trees
+        this.createTrees();
+
+        // Create rocks
+        this.createRocks();
+
         // Create floating orbs in the background
         const orbCount = 20;
         const orbGeometry = new THREE.SphereGeometry(0.2, 16, 16);
@@ -318,10 +415,15 @@ class AmazingApp {
             });
 
             const orb = new THREE.Mesh(orbGeometry, orbMaterial);
+            // Place orbs relative to terrain height
+            const x = (Math.random() - 0.5) * 40;
+            const z = (Math.random() - 0.5) * 40;
+            const h = this.getTerrainHeight(x, z);
+
             orb.position.set(
-                (Math.random() - 0.5) * 40,
-                2 + Math.random() * 8,
-                (Math.random() - 0.5) * 40
+                x,
+                h + 2 + Math.random() * 8,
+                z
             );
 
             orb.userData = {
@@ -341,23 +443,102 @@ class AmazingApp {
         this.createDistantHills();
     }
 
+    createTrees() {
+        const treeCount = 40;
+        const treeTrunkGeo = new THREE.CylinderGeometry(0.2, 0.4, 1.5, 8);
+        const treeLeavesGeo = new THREE.ConeGeometry(1.5, 3, 8);
+
+        const trunkMat = new THREE.MeshStandardMaterial({ color: 0x4d3319 });
+        const leavesMat = new THREE.MeshStandardMaterial({ color: 0x2d4c1e });
+
+        for (let i = 0; i < treeCount; i++) {
+            const x = (Math.random() - 0.5) * 50;
+            const z = (Math.random() - 0.5) * 50;
+
+            // Don't place trees in the center area
+            if (Math.sqrt(x*x + z*z) < 10) continue;
+
+            const h = this.getTerrainHeight(x, z);
+
+            const trunk = new THREE.Mesh(treeTrunkGeo, trunkMat);
+            const leaves = new THREE.Mesh(treeLeavesGeo, leavesMat);
+
+            trunk.position.set(x, h + 0.75, z);
+            trunk.castShadow = true;
+            trunk.receiveShadow = true;
+
+            leaves.position.set(0, 1.5, 0); // Relative to trunk
+            leaves.castShadow = true;
+            leaves.receiveShadow = true;
+
+            trunk.add(leaves);
+
+            // Random scaling
+            const scale = 0.8 + Math.random() * 0.6;
+            trunk.scale.set(scale, scale, scale);
+
+            // Random rotation
+            trunk.rotation.y = Math.random() * Math.PI;
+
+            this.scene.add(trunk);
+        }
+    }
+
+    createRocks() {
+        const rockCount = 30;
+        const rockGeo = new THREE.DodecahedronGeometry(0.5);
+        const rockMat = new THREE.MeshStandardMaterial({
+            color: 0x5a5a5a,
+            roughness: 0.8
+        });
+
+        for (let i = 0; i < rockCount; i++) {
+            const x = (Math.random() - 0.5) * 50;
+            const z = (Math.random() - 0.5) * 50;
+
+             // Don't place rocks in the immediate center
+            if (Math.sqrt(x*x + z*z) < 5) continue;
+
+            const h = this.getTerrainHeight(x, z);
+
+            const rock = new THREE.Mesh(rockGeo, rockMat);
+            rock.position.set(x, h + 0.2, z);
+
+            // Random scaling
+            const scale = 0.5 + Math.random() * 1.5;
+            rock.scale.set(scale, scale * 0.7, scale);
+
+            // Random rotation
+            rock.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+
+            rock.castShadow = true;
+            rock.receiveShadow = true;
+
+            this.scene.add(rock);
+        }
+    }
+
     createDistantHills() {
-        const hillCount = 8;
-        const hillGeometry = new THREE.ConeGeometry(5, 4, 8);
+        const hillCount = 12;
+        const hillGeometry = new THREE.ConeGeometry(10, 8, 8);
         
         for (let i = 0; i < hillCount; i++) {
             const hillMaterial = new THREE.MeshLambertMaterial({
                 color: new THREE.Color().setHSL(0.3 + Math.random() * 0.2, 0.4, 0.3 + Math.random() * 0.2),
                 transparent: true,
-                opacity: 0.7
+                opacity: 0.9 // Increased opacity for better look
             });
 
             const hill = new THREE.Mesh(hillGeometry, hillMaterial);
-            hill.position.set(
-                (Math.random() - 0.5) * 60,
-                1,
-                -15 - Math.random() * 10
-            );
+
+            // Place further out
+            const angle = Math.random() * Math.PI * 2;
+            const dist = 35 + Math.random() * 20;
+            const x = Math.cos(angle) * dist;
+            const z = Math.sin(angle) * dist;
+            const h = this.getTerrainHeight(x, z); // Base height
+
+            hill.position.set(x, h - 2, z); // Sink it a bit
             
             hill.scale.set(
                 1 + Math.random() * 2,
