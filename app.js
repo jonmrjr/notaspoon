@@ -1240,20 +1240,27 @@ class AmazingApp {
         
         let targetPos = new THREE.Vector3();
 
+        // Look ahead distance to compensate for lerp smoothing
+        // Since we lerp with 0.1, we need to aim 10x further to achieve baseSpeed
+        const lookAhead = baseSpeed * 10;
+
+        // Debug logging
+        // console.log(`Monster Speed: ${baseSpeed}, LookAhead: ${lookAhead}, Pos: ${this.monster.position.x.toFixed(2)}`);
+
         if (!this.gameState.isIt) {
             // Monster is IT -> CHASE Bunny
             const direction = new THREE.Vector3()
                 .subVectors(this.bunny.position, this.monster.position)
                 .normalize();
             
-            targetPos.copy(this.monster.position).add(direction.multiplyScalar(baseSpeed));
+            targetPos.copy(this.monster.position).add(direction.multiplyScalar(lookAhead));
         } else {
             // Monster is SAFE -> FLEE from Bunny
             const direction = new THREE.Vector3()
                 .subVectors(this.monster.position, this.bunny.position) // Away vector
                 .normalize();
             
-            targetPos.copy(this.monster.position).add(direction.multiplyScalar(baseSpeed * 0.8)); // Flee slightly slower?
+            targetPos.copy(this.monster.position).add(direction.multiplyScalar(lookAhead * 0.8)); // Flee slightly slower?
             
             // Try to stay near center if too far
             if (this.monster.position.length() > 12) {
@@ -1261,8 +1268,8 @@ class AmazingApp {
             }
         }
 
-        this.monster.userData.targetPosition.lerp(targetPos, 0.1); // Update target
-        this.monster.position.lerp(this.monster.userData.targetPosition, 0.1); // Move to target
+        this.monster.userData.targetPosition.copy(targetPos); // Direct update, no double smoothing
+        this.monster.position.lerp(this.monster.userData.targetPosition, 0.1); // Smooth movement
 
         this.monster.position.x = Math.max(-12, Math.min(12, this.monster.position.x));
         this.monster.position.z = Math.max(-12, Math.min(12, this.monster.position.z));
