@@ -42,6 +42,16 @@ Here are some ideas to make the scene more entertaining and dramatic through the
 6.  **The "Almost Gotcha":** The monster lunges and narrowly misses the bunny, which does a quick evasive maneuver (e.g., a barrel roll or a sharp turn). This could be accompanied by a dramatic camera zoom-in and slow-motion effect for a split second.
 7.  **Bunny's Special Move:** The bunny could have a rare "special move" it can activate, perhaps after being chased for a while, where it performs a dazzling acrobatic maneuver that temporarily stuns or confuses the monster.
 
+## Mobile Improvements
+
+Here are 5 ways to make the game look and behave better on mobile:
+
+1.  **Optimize UI for Mobile (Bottom Controls & Touch-Friendly Buttons):** Move the control panel to the bottom of the screen on mobile devices for easier thumb access. Increase button sizes and touch targets to prevent mis-clicks. Ensure text is readable and the UI doesn't obscure the main game action.
+2.  **Implement Touch Events for Interaction:** Support `touchstart` and `touchmove` events alongside `mousemove` to allow mobile users to interact with the scene logic (e.g., controlling the cursor or interacting with game elements).
+3.  **Mobile Performance Mode:** Detect mobile user agents or screen sizes and automatically reduce graphical settings (e.g., lower shadow map resolution, disable or reduce bloom intensity, cap pixel ratio) to save battery and ensure a smooth framerate.
+4.  **Handle Screen Orientation:** Gracefully handle portrait mode by either adjusting the camera Field of View (FOV) to keep the action visible or displaying a friendly "Please Rotate Your Device" overlay to encourage landscape play.
+5.  **Add Fullscreen Toggle:** Provide a "Fullscreen" button in the UI to allow players to hide the browser address bar and UI for a more immersive experience on small screens.
+
 ## Roadmap
 
 Here's a suggested roadmap for the next 5 iterations of the "Monster Chase Game" project:
