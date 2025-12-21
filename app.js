@@ -34,12 +34,15 @@ class AmazingApp {
         
         this.gameState = {
             score: 0,
-            isChasing: false,
-            monsterSpeed: 0.015,
+            gameActive: false,
+            monsterSpeed: 0.035, // Faster base speed
             lastDodge: 0,
             combo: 0,
             powerUpActive: false,
-            excitement: 0
+            excitement: 0,
+            isIt: false, // true = Bunny (player) has the "potato"
+            timeRemaining: 60,
+            tagCooldown: 0
         };
         this.clock = new THREE.Clock();
         this.raycaster = new THREE.Raycaster();
@@ -188,9 +191,6 @@ class AmazingApp {
     createEnvironment() {
         // Create uneven terrain
         this.createTerrain();
-
-        // Create procedural grass field
-        this.createProceduralGrass();
         
         // Create beautiful sky background
         this.createSkyBackground();
@@ -223,9 +223,9 @@ class AmazingApp {
         const colors = [];
         const colorAttr = new THREE.BufferAttribute(new Float32Array(positionAttribute.count * 3), 3);
 
-        const grassColor = new THREE.Color(0x4a7c2a);
-        const rockColor = new THREE.Color(0x5a4d41);
-        const dirtColor = new THREE.Color(0x3d2918);
+        const baseColor = new THREE.Color(0x2a0a4a); // Dark Purple
+        const highColor = new THREE.Color(0x4a4a5a); // Greyish Purple
+        const lowColor = new THREE.Color(0x1a1a2e); // Dark Blue/Black
 
         for (let i = 0; i < positionAttribute.count; i++) {
             const x = positionAttribute.getX(i);
@@ -241,14 +241,14 @@ class AmazingApp {
 
             // Slope calculation for coloring
             // Simple approximation using height
-            let color = grassColor.clone();
+            let color = baseColor.clone();
 
             if (height > 1.5) {
                 // Higher areas are rockier
-                color.lerp(rockColor, (height - 1.5) / 2);
+                color.lerp(highColor, (height - 1.5) / 2);
             } else if (height < -0.5) {
                 // Lower areas might be dirtier
-                color.lerp(dirtColor, 0.5);
+                color.lerp(lowColor, 0.5);
             }
 
             colors.push(color.r, color.g, color.b);
@@ -268,60 +268,6 @@ class AmazingApp {
         this.ground.rotation.x = -Math.PI / 2;
         this.ground.receiveShadow = true;
         this.scene.add(this.ground);
-    }
-
-    createProceduralGrass() {
-        // Create grass field with instanced geometry for performance
-        const grassBladeGeometry = new THREE.PlaneGeometry(0.1, 0.3);
-        // Translate geometry so origin is at bottom
-        grassBladeGeometry.translate(0, 0.15, 0);
-
-        const grassMaterial = new THREE.MeshLambertMaterial({
-            color: 0x4a7c2a,
-            side: THREE.DoubleSide,
-            transparent: true,
-            opacity: 0.9
-        });
-
-        // Create grass instances
-        const grassCount = 8000;
-        const grassField = new THREE.InstancedMesh(grassBladeGeometry, grassMaterial, grassCount);
-        
-        const matrix = new THREE.Matrix4();
-        const position = new THREE.Vector3();
-        const rotation = new THREE.Euler();
-        const scale = new THREE.Vector3();
-
-        for (let i = 0; i < grassCount; i++) {
-            // Random position across the field
-            const x = (Math.random() - 0.5) * 50;
-            const z = (Math.random() - 0.5) * 50;
-            const y = this.getTerrainHeight(x, z);
-
-            position.set(x, y, z);
-
-            // Random rotation
-            rotation.set(
-                (Math.random() - 0.5) * 0.2, // Slight tilt
-                Math.random() * Math.PI * 2,
-                (Math.random() - 0.5) * 0.2
-            );
-
-            // Random scale for variety
-            const scaleMultiplier = 0.5 + Math.random() * 1.5;
-            scale.set(scaleMultiplier, scaleMultiplier, scaleMultiplier);
-
-            matrix.compose(position, new THREE.Quaternion().setFromEuler(rotation), scale);
-            grassField.setMatrixAt(i, matrix);
-        }
-
-        grassField.instanceMatrix.needsUpdate = true;
-        grassField.castShadow = false;
-        grassField.receiveShadow = true;
-        this.scene.add(grassField);
-
-        // Store reference for animation
-        this.grassField = grassField;
     }
 
     createSkyBackground() {
@@ -361,9 +307,9 @@ class AmazingApp {
                     float elevation = direction.y;
                     
                     // Improved gradient
-                    vec3 horizonColor = vec3(0.5, 0.7, 0.9); // Light blue
-                    vec3 zenithColor = vec3(0.1, 0.3, 0.8); // Deep blue
-                    vec3 sunsetColor = vec3(0.9, 0.6, 0.3); // Orange
+                    vec3 horizonColor = vec3(0.1, 0.0, 0.2); // Dark purple
+                    vec3 zenithColor = vec3(0.0, 0.0, 0.1); // Deep dark blue
+                    vec3 sunsetColor = vec3(0.5, 0.0, 0.5); // Purple neon
                     
                     // Add time-based color variation
                     float dayTime = sin(time * 0.05); // Slow day cycle
@@ -372,14 +318,14 @@ class AmazingApp {
                     vec3 skyBase = mix(horizonColor, zenithColor, smoothstep(0.0, 0.5, elevation));
                     skyBase = mix(skyBase, sunsetColor, smoothstep(-0.1, 0.2, elevation) * (0.5 + 0.5 * dayTime));
                     
-                    // Add procedural clouds
+                    // Add procedural clouds (more like nebulae)
                     float cloudNoise = noise(direction.xz * 3.0 + time * 0.05);
                     cloudNoise += noise(direction.xz * 6.0 + time * 0.05) * 0.5;
                     
                     // Soften clouds and limit to upper sky
                     float cloudDensity = smoothstep(0.4, 0.8, cloudNoise) * smoothstep(0.0, 0.3, elevation);
 
-                    vec3 skyColor = mix(skyBase, vec3(1.0), cloudDensity * 0.8);
+                    vec3 skyColor = mix(skyBase, vec3(0.8, 0.0, 0.8), cloudDensity * 0.4); // Pinkish nebulae
                     
                     gl_FragColor = vec4(skyColor, 1.0);
                 }
@@ -569,20 +515,21 @@ class AmazingApp {
         ui.id = 'game-ui';
         ui.innerHTML = `
             <div class="ui-panel">
+                <div class="status-message" id="status-message" style="color: #ff6b6b; font-size: 24px; font-weight: bold; text-align: center; margin-bottom: 10px;">READY?</div>
+                <div class="score">Time Left: <span id="timer">60</span>s</div>
                 <div class="score">Score: <span id="score">0</span></div>
-                <div class="combo">Combo: <span id="combo">0</span></div>
-                <div class="excitement">Excitement: <span id="excitement">0</span>%</div>
                 <div class="power-up-status" id="power-up-status" style="display: none;">
                     ⚡ SPEED BOOST ACTIVE!
                 </div>
                 <div class="controls">
-                    <button id="start-chase">🏃 Start Chase!</button>
+                    <button id="start-chase">🏃 START GAME</button>
                     <button id="mute-sound">🔊 Mute</button>
                 </div>
                 <div class="instructions">
-                    🎯 Watch the monster chase the bunny!<br>
-                    ⭐ Collect golden power-ups for speed boost!<br>
-                    🎵 Audio will start after first interaction
+                    🎯 <b>TAG / HOT POTATO</b><br>
+                    🔥 If you are red (IT), TAP to tag the monster!<br>
+                    🏃 If you are blue, RUN away to gain points!<br>
+                    ⏱️ Don't hold the potato when time runs out!
                 </div>
             </div>
         `;
@@ -890,9 +837,12 @@ class AmazingApp {
         });
 
         // Game controls
-        document.getElementById('start-chase').addEventListener('click', () => {
-            this.startChase();
-        });
+        const startBtn = document.getElementById('start-chase');
+        if(startBtn) {
+            startBtn.addEventListener('click', () => {
+                this.startGame();
+            });
+        }
 
         document.getElementById('mute-sound').addEventListener('click', (e) => {
             if (this.audioContext) {
@@ -950,11 +900,14 @@ class AmazingApp {
         });
     }
 
-    startChase() {
-        this.gameState.isChasing = true;
+    startGame() {
+        this.gameState.gameActive = true;
         this.gameState.score = 0;
         this.gameState.combo = 0;
         this.gameState.excitement = 0;
+        this.gameState.timeRemaining = 60;
+        this.gameState.isIt = false; // Monster starts as IT
+        this.gameState.tagCooldown = 0;
 
         // Minimize UI during chase
         const uiPanel = document.querySelector('.ui-panel');
@@ -965,7 +918,7 @@ class AmazingApp {
         this.updateUI();
         
         if (this.monster) {
-            this.monster.userData.isChasing = true;
+            this.monster.userData.isChasing = true; // Use this to enable movement logic
         }
         
         // Play chase start sound
@@ -1086,10 +1039,31 @@ class AmazingApp {
     }
 
     updateUI() {
-        document.getElementById('score').textContent = this.gameState.score;
-        document.getElementById('combo').textContent = this.gameState.combo;
-        document.getElementById('excitement').textContent = Math.round(this.gameState.excitement);
+        const scoreEl = document.getElementById('score');
+        const timerEl = document.getElementById('timer');
+        const statusEl = document.getElementById('status-message');
+        const startBtn = document.getElementById('start-chase');
+
+        if (scoreEl) scoreEl.textContent = this.gameState.score;
+        if (timerEl) timerEl.textContent = Math.ceil(this.gameState.timeRemaining);
         
+        if (statusEl) {
+            if (!this.gameState.gameActive) {
+                statusEl.textContent = "GAME OVER";
+                statusEl.style.color = "#ffffff";
+                if(startBtn) startBtn.style.display = 'block';
+            } else {
+                if(startBtn) startBtn.style.display = 'none';
+                if (this.gameState.isIt) {
+                    statusEl.textContent = "🔥 YOU ARE IT! CATCH HIM!";
+                    statusEl.style.color = "#ff4500";
+                } else {
+                    statusEl.textContent = "🏃 RUN! AVOID THE MONSTER!";
+                    statusEl.style.color = "#4ecdc4";
+                }
+            }
+        }
+
         // Show/hide power-up status
         const powerUpStatus = document.getElementById('power-up-status');
         if (this.gameState.powerUpActive) {
@@ -1107,15 +1081,37 @@ class AmazingApp {
     }
 
     updateGameLogic() {
-        const time = this.clock.getElapsedTime(); // Get time at the beginning
+        const time = this.clock.getElapsedTime();
+        const now = Date.now();
 
-        // Update light circles to follow characters
+        // Game Timer Logic
+        if (this.gameState.gameActive) {
+            if (this.gameState.timeRemaining > 0) {
+                this.gameState.timeRemaining -= 0.016; // approx 60fps
+                if (this.gameState.timeRemaining < 0) this.gameState.timeRemaining = 0;
 
-        // Update SpotLight to track the action
+                // Score accumulates if you are NOT IT
+                if (!this.gameState.isIt) {
+                    this.gameState.score += 1;
+                }
+            } else {
+                this.gameState.gameActive = false;
+                this.createFloatingScore("GAME OVER!");
+                // Show game over UI or reset
+                setTimeout(() => {
+                    const uiPanel = document.querySelector('.ui-panel');
+                    if (uiPanel) uiPanel.classList.remove('minimized');
+                }, 2000);
+            }
+            this.updateUI();
+        }
+
+        // --- Visual Updates ---
+
+        // Update SpotLight
         if (this.spotLight) {
             const targetPos = new THREE.Vector3();
             if (this.bunny && this.monster) {
-                // Target the midpoint between bunny and monster
                 targetPos.addVectors(this.bunny.position, this.monster.position).multiplyScalar(0.5);
             } else if (this.monster) {
                 targetPos.copy(this.monster.position);
@@ -1123,24 +1119,29 @@ class AmazingApp {
                 targetPos.copy(this.bunny.position);
             }
             this.spotLight.target.position.lerp(targetPos, 0.05);
+
+            // Change spotlight color based on who is it
+            if (this.gameState.isIt) {
+                this.spotLight.color.setHex(0xFF0000); // Red alert if Player is It
+            } else {
+                this.spotLight.color.setHex(0x00AAFF); // Calm blue if Safe
+            }
         }
 
+        // Update Light Circles
         if (this.monster && this.monsterLightCircle) {
             this.monsterLightCircle.position.copy(this.monster.position);
             this.monsterLightCircle.position.y = -0.1;
-            // Monster circle pulses more aggressively during chase
             this.monsterLightCircle.rotation.z -= 0.03;
-            const chaseIntensity = this.gameState.isChasing ? 0.2 : 0.1;
-            this.monsterLightCircle.material.opacity = 0.4 + Math.sin(time * 5) * chaseIntensity;
             
-            // Change color based on distance to bunny
-            if (this.bunny) {
-                const distance = this.monster.position.distanceTo(this.bunny.position);
-                if (distance < 3) {
-                    this.monsterLightCircle.material.color.setHex(0xFF0000); // Red when close
-                } else {
-                    this.monsterLightCircle.material.color.setHex(0xFF0080); // Purple when far
-                }
+            // If Monster is IT, it glows RED/ORANGE. If Safe, it glows Blue/Green?
+            // Actually, let's stick to "IT" = RED.
+            if (!this.gameState.isIt) { // Monster IS IT
+                this.monsterLightCircle.material.color.setHex(0xFF4500); // OrangeRed
+                this.monsterLightCircle.material.opacity = 0.6 + Math.sin(time * 10) * 0.2; // Pulse fast
+            } else { // Monster is Safe
+                this.monsterLightCircle.material.color.setHex(0x00FF80); // Greenish
+                this.monsterLightCircle.material.opacity = 0.3;
             }
         }
 
@@ -1148,7 +1149,14 @@ class AmazingApp {
             this.bunnyLightCircle.position.copy(this.bunny.position);
             this.bunnyLightCircle.position.y = -0.1;
             this.bunnyLightCircle.rotation.z += 0.01;
-            this.bunnyLightCircle.material.opacity = 0.25 + Math.sin(time * 2) * 0.05;
+
+            if (this.gameState.isIt) { // Bunny IS IT
+                this.bunnyLightCircle.material.color.setHex(0xFF0000); // RED
+                this.bunnyLightCircle.material.opacity = 0.6 + Math.sin(time * 10) * 0.2;
+            } else {
+                this.bunnyLightCircle.material.color.setHex(0x00AAFF); // Blue
+                this.bunnyLightCircle.material.opacity = 0.3;
+            }
         }
 
         // Update particles
@@ -1157,19 +1165,16 @@ class AmazingApp {
             particle.userData.velocity.y += particle.userData.gravity;
             particle.userData.life -= 0.02;
             particle.material.opacity = particle.userData.life;
-            
             if (particle.userData.life <= 0) {
                 this.scene.remove(particle);
                 this.particles.splice(index, 1);
             }
         });
 
-        // Update power-ups
+        // Update Powerups
         this.powerUps.forEach((powerUp, index) => {
             powerUp.rotation.y += powerUp.userData.rotationSpeed;
             powerUp.position.y = powerUp.userData.originalY + Math.sin(time * 3 + index) * 0.3;
-            
-            // Check for collection by bunny
             if (this.bunny && !powerUp.userData.collected) {
                 const distance = powerUp.position.distanceTo(this.bunny.position);
                 if (distance < 1) {
@@ -1181,80 +1186,86 @@ class AmazingApp {
             }
         });
 
-        if (this.bunny && this.bunny.userData) { // Check bunny and its userData exists
+        // --- Character Movement ---
+
+        if (this.bunny && this.bunny.userData) {
             const timeSinceInteraction = time - (this.bunny.userData.lastUserInteractionTime || 0);
             const isUserControlled = timeSinceInteraction < 3.0;
 
-            // Bunny random movement logic (only if not user controlled)
-            if (!isUserControlled && Math.random() < 0.015) { // Adjust probability for target change frequency
-                this.bunny.userData.targetPosition.set(
-                    (Math.random() - 0.5) * 16,  // x range (-8 to +8)
-                    this.bunny.userData.originalPosition.y, // Base Y for bobbing
-                    (Math.random() - 0.5) * 16   // z range (-8 to +8)
-                );
-            }
+            // Smoothly move bunny towards its target position
+            this.bunny.position.x = THREE.MathUtils.lerp(this.bunny.position.x, this.bunny.userData.targetPosition.x, 0.04); // Faster response
+            this.bunny.position.z = THREE.MathUtils.lerp(this.bunny.position.z, this.bunny.userData.targetPosition.z, 0.04);
 
-            // Smoothly move bunny towards its target position for X and Z
-            this.bunny.position.x = THREE.MathUtils.lerp(this.bunny.position.x, this.bunny.userData.targetPosition.x, 0.02);
-            this.bunny.position.z = THREE.MathUtils.lerp(this.bunny.position.z, this.bunny.userData.targetPosition.z, 0.02);
-
-            // Bobbing animation for Y position
             const terrainHeight = this.getTerrainHeight(this.bunny.position.x, this.bunny.position.z);
             const yOffset = this.bunny.userData.yOffset || 0.75;
             this.bunny.position.y = terrainHeight + yOffset + (Math.sin(time * 2.5) * 0.15);
 
-            // Keep bunny in bounds (can be different from spoon/monster if desired)
             this.bunny.position.x = Math.max(-10, Math.min(10, this.bunny.position.x));
             this.bunny.position.z = Math.max(-10, Math.min(10, this.bunny.position.z));
         }
 
         if (this.monster) {
-            // Snap Y to terrain
             const monsterTerrainHeight = this.getTerrainHeight(this.monster.position.x, this.monster.position.z);
             const monsterYOffset = this.monster.userData.yOffset || 1.0;
             this.monster.position.y = monsterTerrainHeight + monsterYOffset;
         }
 
-        // Existing game logic for bunny and monster
-        if (!this.gameState.isChasing || !this.bunny || !this.monster) {
-            // If not chasing, or main characters not loaded, maybe hide or disable UI elements?
-            // For now, just return as original code did.
-            return;
+        if (!this.gameState.gameActive || !this.bunny || !this.monster) return;
+
+        // --- Collision / Tag Logic ---
+        const dist = this.bunny.position.distanceTo(this.monster.position);
+        if (dist < 1.5) {
+            if (now > this.gameState.tagCooldown) {
+                // TAG!
+                this.gameState.isIt = !this.gameState.isIt; // Swap
+                this.gameState.tagCooldown = now + 1000; // 1 second cooldown
+
+                // Visual/Audio Feedback
+                this.createScreenShake(0.2, 0.2);
+                this.createMagicalParticles(this.bunny.position, 20, 0xFFFFFF);
+                if (this.sounds.combo) this.sounds.combo.play(0.5); // Use combo sound for tag
+
+                if (this.gameState.isIt) {
+                    this.createFloatingScore("YOU ARE IT!");
+                } else {
+                    this.createFloatingScore("RUN!");
+                }
+                this.updateUI();
+            }
         }
+
+        // --- Monster AI ---
+        const speedMultiplier = 1 + (this.gameState.excitement / 200);
+        const baseSpeed = this.gameState.monsterSpeed * speedMultiplier;
         
-        // Update monster AI with more intelligence - now chasing bunny
-        if (this.monster.userData.isChasing) {
+        let targetPos = new THREE.Vector3();
+
+        if (!this.gameState.isIt) {
+            // Monster is IT -> CHASE Bunny
             const direction = new THREE.Vector3()
                 .subVectors(this.bunny.position, this.monster.position)
                 .normalize();
             
-            // Monster gets faster as excitement builds
-            const speedMultiplier = 1 + (this.gameState.excitement / 200);
-            this.monster.userData.targetPosition.copy(this.monster.position)
-                .add(direction.multiplyScalar(this.gameState.monsterSpeed * speedMultiplier));
+            targetPos.copy(this.monster.position).add(direction.multiplyScalar(baseSpeed));
+        } else {
+            // Monster is SAFE -> FLEE from Bunny
+            const direction = new THREE.Vector3()
+                .subVectors(this.monster.position, this.bunny.position) // Away vector
+                .normalize();
             
-            // Add some randomness to make it more interesting
-            this.monster.userData.targetPosition.add(new THREE.Vector3(
-                (Math.random() - 0.5) * 0.1,
-                0,
-                (Math.random() - 0.5) * 0.1
-            ));
+            targetPos.copy(this.monster.position).add(direction.multiplyScalar(baseSpeed * 0.8)); // Flee slightly slower?
             
-            // Monster makes sounds when getting close
-            const distance = this.monster.position.distanceTo(this.bunny.position);
-            if (distance < 2 && Math.random() < 0.05) {
-                if (this.sounds.monster) {
-                    this.sounds.monster.play(0.3);
-                }
+            // Try to stay near center if too far
+            if (this.monster.position.length() > 12) {
+                targetPos.lerp(new THREE.Vector3(0,0,0), 0.05);
             }
         }
-        
-        // Smooth movement for monster
-        this.monster.position.lerp(this.monster.userData.targetPosition, 0.03);
-        
-        // Keep characters in bounds
-        this.monster.position.x = Math.max(-10, Math.min(10, this.monster.position.x));
-        this.monster.position.z = Math.max(-10, Math.min(10, this.monster.position.z));
+
+        this.monster.userData.targetPosition.lerp(targetPos, 0.1); // Update target
+        this.monster.position.lerp(this.monster.userData.targetPosition, 0.1); // Move to target
+
+        this.monster.position.x = Math.max(-12, Math.min(12, this.monster.position.x));
+        this.monster.position.z = Math.max(-12, Math.min(12, this.monster.position.z));
     }
 
     collectPowerUp(powerUp) {
