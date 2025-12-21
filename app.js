@@ -54,6 +54,7 @@ class AmazingApp {
         this.createPostProcessing();
         this.createLighting();
         this.createEnvironment();
+        this.generateEnvironmentMap();
         this.createControls();
         this.createUI();
         this.createTargetMarker();
@@ -154,6 +155,32 @@ class AmazingApp {
         this.fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
         this.fillLight.position.set(-8, 10, -5);
         this.scene.add(this.fillLight);
+
+        // Dramatic SpotLight that follows action
+        this.spotLight = new THREE.SpotLight(0xffaa00, 500);
+        this.spotLight.position.set(0, 20, 0);
+        this.spotLight.angle = Math.PI / 6;
+        this.spotLight.penumbra = 0.5;
+        this.spotLight.decay = 2;
+        this.spotLight.distance = 50;
+        this.spotLight.castShadow = true;
+        this.spotLight.shadow.mapSize.width = 1024;
+        this.spotLight.shadow.mapSize.height = 1024;
+        this.spotLight.shadow.bias = -0.0001;
+        this.scene.add(this.spotLight);
+        this.spotLight.target.position.set(0, 0, 0);
+        this.scene.add(this.spotLight.target);
+    }
+
+    generateEnvironmentMap() {
+        const pmremGenerator = new THREE.PMREMGenerator(this.renderer);
+        pmremGenerator.compileEquirectangularShader();
+
+        // Generate environment map from the current scene (sky, ground, hills)
+        // This captures the procedural sky and grass for realistic reflections
+        this.scene.environment = pmremGenerator.fromScene(this.scene, 0.04).texture;
+
+        pmremGenerator.dispose();
     }
 
     createEnvironment() {
@@ -896,6 +923,20 @@ class AmazingApp {
         const time = this.clock.getElapsedTime(); // Get time at the beginning
 
         // Update light circles to follow characters
+
+        // Update SpotLight to track the action
+        if (this.spotLight) {
+            const targetPos = new THREE.Vector3();
+            if (this.bunny && this.monster) {
+                // Target the midpoint between bunny and monster
+                targetPos.addVectors(this.bunny.position, this.monster.position).multiplyScalar(0.5);
+            } else if (this.monster) {
+                targetPos.copy(this.monster.position);
+            } else if (this.bunny) {
+                targetPos.copy(this.bunny.position);
+            }
+            this.spotLight.target.position.lerp(targetPos, 0.05);
+        }
 
         if (this.monster && this.monsterLightCircle) {
             this.monsterLightCircle.position.copy(this.monster.position);
