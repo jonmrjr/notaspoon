@@ -623,7 +623,8 @@ class AmazingApp {
                 velocity: new THREE.Vector3(),
                 targetPosition: new THREE.Vector3(4, 0, 0),
                 isChasing: false,
-                frustration: 0
+                frustration: 0,
+                yOffset: (size.y * scale) / 2
             };
             
             this.scene.add(this.monster);
@@ -670,7 +671,8 @@ class AmazingApp {
             this.bunny.userData = {
                 originalPosition: this.bunny.position.clone(),
                 velocity: new THREE.Vector3(),
-                targetPosition: new THREE.Vector3(0, 0, 2)
+                targetPosition: new THREE.Vector3(0, 0, 2),
+                yOffset: desiredHeight / 2
             };
 
             this.scene.add(this.bunny);
@@ -809,10 +811,14 @@ class AmazingApp {
         });
         
         const powerUp = new THREE.Mesh(powerUpGeometry, powerUpMaterial);
+        const x = (Math.random() - 0.5) * 12;
+        const z = (Math.random() - 0.5) * 12;
+        const h = this.getTerrainHeight(x, z);
+
         powerUp.position.set(
-            (Math.random() - 0.5) * 12,
-            1,
-            (Math.random() - 0.5) * 12
+            x,
+            h + 1,
+            z
         );
         
         powerUp.userData = {
@@ -927,7 +933,7 @@ class AmazingApp {
                         // Show marker
                         if (this.targetMarker) {
                             this.targetMarker.position.copy(point);
-                            this.targetMarker.position.y = 0.05;
+                            this.targetMarker.position.y += 0.05;
                             this.targetMarker.visible = true;
 
                             if (this.targetMarkerTimeout) clearTimeout(this.targetMarkerTimeout);
@@ -1193,12 +1199,20 @@ class AmazingApp {
             this.bunny.position.z = THREE.MathUtils.lerp(this.bunny.position.z, this.bunny.userData.targetPosition.z, 0.02);
 
             // Bobbing animation for Y position
-            // Ensure originalPosition.y is sensible (e.g., 0 if ground is -2 and bunny is 1.5 tall centered)
-            this.bunny.position.y = this.bunny.userData.originalPosition.y + (Math.sin(time * 2.5) * 0.15); // Adjust speed and amplitude
+            const terrainHeight = this.getTerrainHeight(this.bunny.position.x, this.bunny.position.z);
+            const yOffset = this.bunny.userData.yOffset || 0.75;
+            this.bunny.position.y = terrainHeight + yOffset + (Math.sin(time * 2.5) * 0.15);
 
             // Keep bunny in bounds (can be different from spoon/monster if desired)
             this.bunny.position.x = Math.max(-10, Math.min(10, this.bunny.position.x));
             this.bunny.position.z = Math.max(-10, Math.min(10, this.bunny.position.z));
+        }
+
+        if (this.monster) {
+            // Snap Y to terrain
+            const monsterTerrainHeight = this.getTerrainHeight(this.monster.position.x, this.monster.position.z);
+            const monsterYOffset = this.monster.userData.yOffset || 1.0;
+            this.monster.position.y = monsterTerrainHeight + monsterYOffset;
         }
 
         // Existing game logic for bunny and monster
