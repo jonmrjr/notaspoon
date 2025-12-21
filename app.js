@@ -1087,5 +1087,5 @@ class AmazingApp {
 
 // Initialize the amazing app
 window.addEventListener('load', () => {
-    new AmazingApp();
+    window.app = new AmazingApp();
 });
