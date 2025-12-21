@@ -7,6 +7,9 @@ body {
     font-family: 'Arial', sans-serif;
     background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
     animation: backgroundShift 10s ease-in-out infinite alternate;
+    touch-action: none; /* Prevent scrolling/zooming on mobile */
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 @keyframes backgroundShift {
