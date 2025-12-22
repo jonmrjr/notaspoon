@@ -64,6 +64,16 @@ class AmazingApp {
         this.createUI();
         this.createTargetMarker();
         await this.loadModels();
+
+        // Remove loading screen once models are loaded
+        const loadingScreen = document.getElementById('loading-screen');
+        if (loadingScreen) {
+            loadingScreen.classList.add('hidden');
+            setTimeout(() => {
+                loadingScreen.remove();
+            }, 1000);
+        }
+
         this.createLightCircles();
         this.initSoundSystem();
         this.setupEventListeners();
@@ -522,8 +532,8 @@ class AmazingApp {
                     ⚡ SPEED BOOST ACTIVE!
                 </div>
                 <div class="controls">
-                    <button id="start-chase">🏃 START GAME</button>
-                    <button id="mute-sound">🔊 Mute</button>
+                    <button id="start-chase" aria-label="Start Game">🏃 START GAME</button>
+                    <button id="mute-sound" aria-label="Mute Sound">🔊 Mute</button>
                 </div>
                 <div class="instructions">
                     🎯 <b>TAG / HOT POTATO</b><br>
@@ -531,6 +541,10 @@ class AmazingApp {
                     🏃 If you are blue, RUN away to gain points!<br>
                     ⏱️ Don't hold the potato when time runs out!
                 </div>
+            </div>
+            <div class="loading-screen" id="loading-screen" role="status" aria-label="Loading game resources">
+                <div class="loading-spinner"></div>
+                <div>Loading Magic...</div>
             </div>
         `;
         document.body.appendChild(ui);
