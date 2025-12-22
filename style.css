@@ -302,14 +302,12 @@ button:active {
     z-index: 9999;
     color: white;
     font-size: 24px;
-    animation: fadeOut 1s ease-out 2s forwards;
+    transition: opacity 1s ease-out, visibility 1s ease-out;
 }
 
-@keyframes fadeOut {
-    to {
-        opacity: 0;
-        visibility: hidden;
-    }
+.loading-screen.hidden {
+    opacity: 0;
+    visibility: hidden;
 }
 
 .loading-spinner {
