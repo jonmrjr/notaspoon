@@ -627,6 +627,12 @@ class AmazingApp {
         } catch (error) {
             console.error('Error loading bunny model:', error);
         }
+
+        // Hide loading screen
+        const loadingScreen = document.getElementById('loading-screen');
+        if (loadingScreen) {
+            loadingScreen.classList.add('hidden');
+        }
     }
 
     createTargetMarker() {
