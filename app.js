@@ -515,15 +515,15 @@ class AmazingApp {
         ui.id = 'game-ui';
         ui.innerHTML = `
             <div class="ui-panel">
-                <div class="status-message" id="status-message" style="color: #ff6b6b; font-size: 24px; font-weight: bold; text-align: center; margin-bottom: 10px;">READY?</div>
+                <div class="status-message" id="status-message" role="status" aria-live="polite" style="color: #ff6b6b; font-size: 24px; font-weight: bold; text-align: center; margin-bottom: 10px;">READY?</div>
                 <div class="score">Time Left: <span id="timer">60</span>s</div>
                 <div class="score">Score: <span id="score">0</span></div>
-                <div class="power-up-status" id="power-up-status" style="display: none;">
+                <div class="power-up-status" id="power-up-status" role="alert" style="display: none;">
                     ⚡ SPEED BOOST ACTIVE!
                 </div>
                 <div class="controls">
-                    <button id="start-chase">🏃 START GAME</button>
-                    <button id="mute-sound">🔊 Mute</button>
+                    <button id="start-chase" aria-label="Start Game">🏃 START GAME</button>
+                    <button id="mute-sound" aria-label="Toggle Sound" title="Toggle Sound" aria-pressed="false">🔊 Mute</button>
                 </div>
                 <div class="instructions">
                     🎯 <b>TAG / HOT POTATO</b><br>
@@ -849,9 +849,11 @@ class AmazingApp {
                 if (this.audioContext.state === 'suspended') {
                     this.audioContext.resume();
                     e.target.textContent = '🔊 Mute';
+                    e.target.setAttribute('aria-pressed', 'false');
                 } else {
                     this.audioContext.suspend();
                     e.target.textContent = '🔇 Unmute';
+                    e.target.setAttribute('aria-pressed', 'true');
                 }
             }
         });
