@@ -308,7 +308,6 @@ button:focus-visible {
     z-index: 9999;
     color: white;
     font-size: 24px;
-    animation: fadeOut 1s ease-out 2s forwards;
 }
 
 @keyframes fadeOut {
