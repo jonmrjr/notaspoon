@@ -67,6 +67,14 @@ class AmazingApp {
         this.createLightCircles();
         this.initSoundSystem();
         this.setupEventListeners();
+
+        // Remove loading screen
+        const loadingScreen = document.getElementById('loading-screen');
+        if (loadingScreen) {
+            loadingScreen.classList.add('fade-out');
+            setTimeout(() => loadingScreen.remove(), 500);
+        }
+
         this.startGameLoop();
         this.animate();
     }
