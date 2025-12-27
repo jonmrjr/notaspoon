@@ -64,6 +64,18 @@ class AmazingApp {
         this.createUI();
         this.createTargetMarker();
         await this.loadModels();
+
+        // Remove loading screen
+        const loadingScreen = document.querySelector('.loading-screen');
+        if (loadingScreen) {
+            loadingScreen.classList.add('fade-out');
+            setTimeout(() => {
+                if (loadingScreen.parentNode) {
+                    loadingScreen.parentNode.removeChild(loadingScreen);
+                }
+            }, 1000);
+        }
+
         this.createLightCircles();
         this.initSoundSystem();
         this.setupEventListeners();
