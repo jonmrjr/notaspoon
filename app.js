@@ -42,7 +42,8 @@ class AmazingApp {
             excitement: 0,
             isIt: false, // true = Bunny (player) has the "potato"
             timeRemaining: 60,
-            tagCooldown: 0
+            tagCooldown: 0,
+            hasPlayed: false
         };
         this.clock = new THREE.Clock();
         this.raycaster = new THREE.Raycaster();
@@ -913,6 +914,7 @@ class AmazingApp {
     }
 
     startGame() {
+        this.gameState.hasPlayed = true;
         this.gameState.gameActive = true;
         this.gameState.score = 0;
         this.gameState.combo = 0;
@@ -1063,7 +1065,13 @@ class AmazingApp {
             if (!this.gameState.gameActive) {
                 statusEl.textContent = "GAME OVER";
                 statusEl.style.color = "#ffffff";
-                if(startBtn) startBtn.style.display = 'block';
+                if(startBtn) {
+                    startBtn.style.display = 'block';
+                    if (this.gameState.hasPlayed) {
+                        startBtn.textContent = "🔄 PLAY AGAIN";
+                        startBtn.setAttribute('aria-label', 'Play Again');
+                    }
+                }
             } else {
                 if(startBtn) startBtn.style.display = 'none';
                 if (this.gameState.isIt) {
@@ -1113,6 +1121,9 @@ class AmazingApp {
                 setTimeout(() => {
                     const uiPanel = document.querySelector('.ui-panel');
                     if (uiPanel) uiPanel.classList.remove('minimized');
+                    // Move focus to start button for accessibility
+                    const startBtn = document.getElementById('start-chase');
+                    if (startBtn) startBtn.focus();
                 }, 2000);
             }
             this.updateUI();
