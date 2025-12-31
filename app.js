@@ -1063,7 +1063,11 @@ class AmazingApp {
             if (!this.gameState.gameActive) {
                 statusEl.textContent = "GAME OVER";
                 statusEl.style.color = "#ffffff";
-                if(startBtn) startBtn.style.display = 'block';
+                if(startBtn && startBtn.style.display === 'none') {
+                    startBtn.style.display = 'block';
+                    startBtn.textContent = 'PLAY AGAIN';
+                    startBtn.focus();
+                }
             } else {
                 if(startBtn) startBtn.style.display = 'none';
                 if (this.gameState.isIt) {
