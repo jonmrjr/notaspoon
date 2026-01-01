@@ -48,6 +48,7 @@ class AmazingApp {
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
         this.noise = new SimplexNoise();
+        this.keys = {}; // Track keyboard state
         
         this.init();
     }
@@ -539,6 +540,7 @@ class AmazingApp {
                     🎯 <b>TAG / HOT POTATO</b><br>
                     🔥 If you are red (IT), TAP to tag the monster!<br>
                     🏃 If you are blue, RUN away to gain points!<br>
+                    ⌨️ Move: WASD / Arrows | M: Mute<br>
                     ⏱️ Don't hold the potato when time runs out!
                 </div>
             </div>
@@ -838,6 +840,26 @@ class AmazingApp {
     }
 
     setupEventListeners() {
+        // Keyboard controls
+        window.addEventListener('keydown', (e) => {
+            // Mute toggle shortcut
+            if (e.code === 'KeyM') {
+                const muteBtn = document.getElementById('mute-sound');
+                if (muteBtn) muteBtn.click();
+            }
+
+            this.keys[e.code] = true;
+
+            // Prevent scrolling for navigation keys
+            if(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) {
+                e.preventDefault();
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            this.keys[e.code] = false;
+        });
+
         // Window resize
         window.addEventListener('resize', () => {
             this.camera.aspect = window.innerWidth / window.innerHeight;
@@ -1096,7 +1118,34 @@ class AmazingApp {
         }, 16); // ~60 FPS
     }
 
+    handleKeyboardInput() {
+        if (!this.bunny || !this.gameState.gameActive) return;
+
+        // Calculate movement vector from keys
+        const moveX = (this.keys['ArrowRight'] || this.keys['KeyD'] ? 1 : 0) - (this.keys['ArrowLeft'] || this.keys['KeyA'] ? 1 : 0);
+        const moveZ = (this.keys['ArrowDown'] || this.keys['KeyS'] ? 1 : 0) - (this.keys['ArrowUp'] || this.keys['KeyW'] ? 1 : 0);
+
+        if (moveX !== 0 || moveZ !== 0) {
+            // Move target position relative to current position to allow continuous control
+            const speed = 0.5; // Distance to look ahead per frame
+            const targetX = this.bunny.position.x + moveX * speed;
+            const targetZ = this.bunny.position.z + moveZ * speed;
+
+            this.bunny.userData.targetPosition.set(targetX, 0, targetZ);
+
+            // Clamp to bounds
+            this.bunny.userData.targetPosition.x = Math.max(-10, Math.min(10, this.bunny.userData.targetPosition.x));
+            this.bunny.userData.targetPosition.z = Math.max(-10, Math.min(10, this.bunny.userData.targetPosition.z));
+
+            // Update interaction time so logic knows user is controlling
+            this.bunny.userData.lastUserInteractionTime = this.clock.getElapsedTime();
+        }
+    }
+
     updateGameLogic() {
+        // Handle keyboard movement if active
+        this.handleKeyboardInput();
+
         const time = this.clock.getElapsedTime();
         const now = Date.now();
 
