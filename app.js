@@ -532,18 +532,38 @@ class AmazingApp {
                     ⚡ SPEED BOOST ACTIVE!
                 </div>
                 <div class="controls">
-                    <button id="start-chase" aria-label="Start Game">🏃 START GAME</button>
-                    <button id="mute-sound" aria-label="Toggle Sound" title="Toggle Sound" aria-pressed="false">🔊 Mute</button>
+                    <button id="start-chase" aria-label="Start Game" title="Press Space to Start">🏃 START GAME</button>
+                    <button id="mute-sound" aria-label="Toggle Sound" title="Press M to Mute" aria-pressed="false">🔊 Mute</button>
                 </div>
                 <div class="instructions">
                     🎯 <b>TAG / HOT POTATO</b><br>
                     🔥 If you are red (IT), TAP to tag the monster!<br>
                     🏃 If you are blue, RUN away to gain points!<br>
-                    ⏱️ Don't hold the potato when time runs out!
+                    ⏱️ Don't hold the potato when time runs out!<br>
+                    ⌨️ <b>Space</b> to Start • <b>M</b> to Mute
                 </div>
             </div>
         `;
         document.body.appendChild(ui);
+    }
+
+    toggleMute() {
+        const btn = document.getElementById('mute-sound');
+        if (this.audioContext) {
+            if (this.audioContext.state === 'suspended') {
+                this.audioContext.resume();
+                if(btn) {
+                    btn.textContent = '🔊 Mute';
+                    btn.setAttribute('aria-pressed', 'false');
+                }
+            } else {
+                this.audioContext.suspend();
+                if(btn) {
+                    btn.textContent = '🔇 Unmute';
+                    btn.setAttribute('aria-pressed', 'true');
+                }
+            }
+        }
     }
 
     async loadModels() {
@@ -855,15 +875,31 @@ class AmazingApp {
         }
 
         document.getElementById('mute-sound').addEventListener('click', (e) => {
-            if (this.audioContext) {
-                if (this.audioContext.state === 'suspended') {
-                    this.audioContext.resume();
-                    e.target.textContent = '🔊 Mute';
-                    e.target.setAttribute('aria-pressed', 'false');
-                } else {
-                    this.audioContext.suspend();
-                    e.target.textContent = '🔇 Unmute';
-                    e.target.setAttribute('aria-pressed', 'true');
+            this.toggleMute();
+        });
+
+        // Global Keyboard Shortcuts
+        window.addEventListener('keydown', (e) => {
+            // Prevent default scrolling for Space
+            if (e.key === ' ' && document.activeElement.tagName !== 'BUTTON') {
+                e.preventDefault();
+            }
+
+            if (this.gameState.gameActive) {
+                // Game controls during play
+                if (e.key === 'm' || e.key === 'M') {
+                    this.toggleMute();
+                }
+            } else {
+                // Menu controls
+                if (e.key === ' ' || e.key === 'Enter') {
+                    // Only start if not clicking a button
+                    if (document.activeElement.tagName !== 'BUTTON') {
+                        this.startGame();
+                    }
+                }
+                if (e.key === 'm' || e.key === 'M') {
+                    this.toggleMute();
                 }
             }
         });
