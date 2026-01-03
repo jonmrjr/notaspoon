@@ -6,6 +6,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { SimplexNoise } from './noise.js';
+import { Logo } from './Logo.js';
 
 class AmazingApp {
     constructor() {
@@ -77,6 +78,10 @@ class AmazingApp {
         this.createLightCircles();
         this.initSoundSystem();
         this.setupEventListeners();
+
+        // Initialize Logo
+        this.logo = new Logo('logo-container');
+
         this.startGameLoop();
         this.animate();
     }

@@ -36,9 +36,19 @@ body {
     position: relative;
 }
 
+#logo-container {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    width: 60px;
+    height: 60px;
+    z-index: 2000;
+    pointer-events: none;
+}
+
 #game-ui {
     position: fixed;
-    top: 20px;
+    top: 85px;
     left: 20px;
     z-index: 1000;
     pointer-events: none;
