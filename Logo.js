@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { PLYLoader } from 'three/addons/loaders/PLYLoader.js';
+
 
 export class Logo {
     constructor(containerId) {
@@ -48,42 +48,28 @@ export class Logo {
     }
 
     async loadModel() {
-        const loader = new PLYLoader();
+        const loader = new THREE.TextureLoader();
         try {
-            const geometry = await loader.loadAsync('spoon.ply');
+            const texture = await loader.loadAsync('logo-icon.jpg');
+            texture.colorSpace = THREE.SRGBColorSpace;
 
-            // Need to compute vertex normals if they don't exist
-            geometry.computeVertexNormals();
-
-            // Create a material
-            const material = new THREE.MeshStandardMaterial({
-                color: 0xcccccc,
-                metalness: 0.8,
-                roughness: 0.2
+            const geometry = new THREE.PlaneGeometry(2.5, 2.5);
+            const material = new THREE.MeshBasicMaterial({
+                map: texture,
+                transparent: true,
+                side: THREE.DoubleSide
             });
 
             this.model = new THREE.Mesh(geometry, material);
 
-            // Center the model
-            const box = new THREE.Box3().setFromObject(this.model);
-            const center = box.getCenter(new THREE.Vector3());
-            this.model.position.sub(center);
-
-            // Normalize size
-            const size = box.getSize(new THREE.Vector3());
-            const maxDim = Math.max(size.x, size.y, size.z);
-            const targetSize = 2.5;
-            const scale = targetSize / maxDim;
-            this.model.scale.multiplyScalar(scale);
-
             // Add a slight tilt
-            this.model.rotation.z = Math.PI / 4;
-            this.model.rotation.x = Math.PI / 6;
+            this.model.rotation.z = 0;
+            this.model.rotation.x = 0;
 
             this.scene.add(this.model);
-            console.log("Logo loaded successfully");
+            console.log("Logo image loaded successfully");
         } catch (e) {
-            console.error('Failed to load logo model:', e);
+            console.error('Failed to load logo image:', e);
         }
     }
 
