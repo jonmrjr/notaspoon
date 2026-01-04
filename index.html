@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,31 +8,38 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Luckiest+Guy&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Luckiest+Guy&display=swap"
+        rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
             background-color: #ffffff;
         }
+
         .font-bubble {
             font-family: 'Luckiest Guy', cursive;
             line-height: 0.9;
         }
+
         .product-card {
             transition: transform 0.2s ease;
         }
+
         .product-card:hover {
             transform: translateY(-2px);
         }
+
         /* Hidden by default */
         #about-modal {
             display: none;
         }
+
         #about-modal.active {
             display: flex;
         }
     </style>
 </head>
+
 <body class="text-black">
 
     <!-- Header -->
@@ -62,7 +70,9 @@
         </div>
 
         <div class="mt-32 text-left text-gray-400 py-12 border-t border-gray-100">
-            <p class="text-xs lowercase">© 2026 notaspoon.com <a href="game.html" class="opacity-50 hover:opacity-100 transition-opacity ml-1 no-underline" title="There is no spoon">🥄</a></p>
+            <p class="text-xs lowercase">© 2026 notaspoon.com <a href="game.html"
+                    class="opacity-50 hover:opacity-100 transition-opacity ml-1 no-underline"
+                    title="There is no spoon">🥄</a></p>
         </div>
     </main>
 
@@ -82,11 +92,11 @@
     <script>
         // Pricing logic: 15, 20, 25, 30...
         const baseProducts = [
-            { id: 1, name: "print 001", img: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=800" },
-            { id: 2, name: "print 002", img: "https://images.unsplash.com/photo-1633167606207-d840b5070fc2?auto=format&fit=crop&q=80&w=800" },
-            { id: 3, name: "print 003", img: "https://images.unsplash.com/photo-1614850523296-d8c1af93d400?auto=format&fit=crop&q=80&w=800" },
-            { id: 4, name: "print 004", img: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&q=80&w=800" },
-            { id: 5, name: "print 005", img: "https://images.unsplash.com/photo-1618556450991-2f1af64e8191?auto=format&fit=crop&q=80&w=800" }
+            { id: 1, name: "print 001", price: 15, img: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=800" },
+            { id: 2, name: "print 002", price: 20, img: "https://images.unsplash.com/photo-1633167606207-d840b5070fc2?auto=format&fit=crop&q=80&w=800" },
+            { id: 3, name: "print 003", price: 25, img: "https://images.unsplash.com/photo-1614850523296-d8c1af93d400?auto=format&fit=crop&q=80&w=800" },
+            { id: 4, name: "notaspoon", price: 30, img: "logo-icon.jpg" },
+            { id: 5, name: "print 005", price: 35, img: "https://images.unsplash.com/photo-1618556450991-2f1af64e8191?auto=format&fit=crop&q=80&w=800" }
         ];
 
         function toggleAbout() {
@@ -97,8 +107,8 @@
         function renderProducts() {
             const feed = document.getElementById('product-feed');
 
-            baseProducts.forEach((product, index) => {
-                const price = 15 + (index * 5);
+            baseProducts.forEach((product) => {
+                const price = product.price;
                 const card = document.createElement('div');
                 card.className = "product-card flex flex-col";
 
@@ -129,4 +139,5 @@
         window.onload = renderProducts;
     </script>
 </body>
+
 </html>
