@@ -3,70 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Not A Spoon</title>
+    <title>notaspoon.com</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Luckiest+Guy&display=swap" rel="stylesheet">
     <style>
         body {
-            background-color: #0a0a0a;
-            color: #e0e0e0;
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            margin: 0;
-            height: 100vh;
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff;
+        }
+        .font-bubble {
+            font-family: 'Luckiest Guy', cursive;
+            line-height: 0.9;
+        }
+        .product-card {
+            transition: transform 0.2s ease;
+        }
+        .product-card:hover {
+            transform: translateY(-2px);
+        }
+        /* Hidden by default */
+        #about-modal {
+            display: none;
+        }
+        #about-modal.active {
             display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-        }
-        h1 {
-            font-size: 3rem;
-            margin-bottom: 0.5rem;
-            letter-spacing: 2px;
-            font-weight: 300;
-        }
-        p {
-            font-size: 1.2rem;
-            color: #888;
-            font-weight: 300;
-            max-width: 600px;
-            line-height: 1.5;
-        }
-        .container {
-            padding: 2rem;
-        }
-        .divider {
-            width: 50px;
-            height: 2px;
-            background-color: #333;
-            margin: 2rem auto;
-        }
-        .footer {
-            position: absolute;
-            bottom: 2rem;
-            font-size: 0.8rem;
-            color: #444;
-        }
-        a.easter-egg {
-            text-decoration: none;
-            color: inherit;
-            font-size: 1.2rem;
-            opacity: 0.3;
-            transition: opacity 0.3s ease;
-        }
-        a.easter-egg:hover {
-            opacity: 1;
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <h1>NOT A SPOON</h1>
-        <div class="divider"></div>
-        <p>The ultimate shopping experience is being forged.</p>
-        <p>Coming Soon.</p>
+<body class="text-black">
+
+    <!-- Header -->
+    <header class="sticky top-0 z-40 bg-white border-b border-gray-100">
+        <div class="max-w-4xl mx-auto px-6 py-6 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <!-- Stylized SVG Logo -->
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-black">
+                    <path d="M12 2C13.6569 2 15 3.34315 15 5V12C15 13.6569 13.6569 15 12 15C10.3431 15 9 13.6569 9 12V5C9 3.34315 10.3431 2 12 2Z" fill="currentColor"/>
+                    <path d="M12 15V22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="12" cy="5" r="1" fill="white"/>
+                </svg>
+                <h1 class="text-xl font-bold tracking-tighter lowercase">notaspoon.com</h1>
+            </div>
+            <nav class="flex gap-6 text-sm font-medium">
+                <button onclick="toggleAbout()" class="hover:underline transition">about</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-xl mx-auto px-6 py-16">
+        <div class="mb-20">
+            <h2 class="font-bubble text-6xl md:text-8xl text-left lowercase tracking-tight">
+                discover one of kind prints.
+            </h2>
+        </div>
+
+        <!-- Product Feed -->
+        <div id="product-feed" class="flex flex-col gap-24">
+            <!-- Products will be injected here -->
+        </div>
+
+        <div class="mt-32 text-left text-gray-400 py-12 border-t border-gray-100">
+            <p class="text-xs lowercase">© 2026 notaspoon.com <a href="game.html" class="opacity-50 hover:opacity-100 transition-opacity ml-1 no-underline" title="There is no spoon">🥄</a></p>
+        </div>
+    </main>
+
+    <!-- About Modal -->
+    <div id="about-modal" class="fixed inset-0 z-50 bg-white/95 backdrop-blur-sm flex items-center justify-center p-6">
+        <div class="max-w-md w-full">
+            <h3 class="text-2xl font-bold mb-4">about notaspoon.com</h3>
+            <p class="text-gray-600 mb-8 leading-relaxed">
+                notaspoon.com is a curated collection of one-of-a-kind prints and digital artifacts.
+                Everything you see here is designed to challenge the utility of everyday objects.
+                As the name suggests, none of these are spoons.
+            </p>
+            <button onclick="toggleAbout()" class="font-bold underline decoration-2 underline-offset-4">close</button>
+        </div>
     </div>
 
-    <div class="footer">
-        &copy; 2024 Not A Spoon Inc. <a href="game.html" class="easter-egg" title="There is no spoon">🥄</a>
-    </div>
+    <script>
+        // Pricing logic: 15, 20, 25, 30...
+        const baseProducts = [
+            { id: 1, name: "print 001", img: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=800" },
+            { id: 2, name: "print 002", img: "https://images.unsplash.com/photo-1633167606207-d840b5070fc2?auto=format&fit=crop&q=80&w=800" },
+            { id: 3, name: "print 003", img: "https://images.unsplash.com/photo-1614850523296-d8c1af93d400?auto=format&fit=crop&q=80&w=800" },
+            { id: 4, name: "print 004", img: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&q=80&w=800" },
+            { id: 5, name: "print 005", img: "https://images.unsplash.com/photo-1618556450991-2f1af64e8191?auto=format&fit=crop&q=80&w=800" }
+        ];
+
+        function toggleAbout() {
+            const modal = document.getElementById('about-modal');
+            modal.classList.toggle('active');
+        }
+
+        function renderProducts() {
+            const feed = document.getElementById('product-feed');
+
+            baseProducts.forEach((product, index) => {
+                const price = 15 + (index * 5);
+                const card = document.createElement('div');
+                card.className = "product-card flex flex-col";
+
+                card.innerHTML = `
+                    <div class="aspect-square bg-gray-100 mb-6 overflow-hidden rounded-sm">
+                        <img
+                            src="${product.img}"
+                            alt="${product.name}"
+                            class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700"
+                        >
+                    </div>
+                    <div class="flex flex-col items-start">
+                        <h3 class="text-lg font-semibold mb-1 lowercase">${product.name}</h3>
+                        <div class="text-sm text-gray-500 mb-4">$${price}.00</div>
+                        <button
+                            onclick="console.log('bought')"
+                            class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors"
+                        >
+                            buy
+                        </button>
+                    </div>
+                `;
+
+                feed.appendChild(card);
+            });
+        }
+
+        window.onload = renderProducts;
+    </script>
 </body>
 </html>
