@@ -545,7 +545,7 @@ class AmazingApp {
                     🔥 If you are red (IT), TAP to tag the monster!<br>
                     🏃 If you are blue, RUN away to gain points!<br>
                     ⏱️ Don't hold the potato when time runs out!<br>
-                    ⌨️ <b>Space</b> to Start • <b>M</b> to Mute
+                    ⌨️ <kbd>Space</kbd> to Start • <kbd>M</kbd> to Mute
                 </div>
             </div>
         `;
