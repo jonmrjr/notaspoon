@@ -95,7 +95,7 @@
             { id: 1, name: "print 001", price: 15, img: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=800" },
             { id: 2, name: "print 002", price: 20, img: "https://images.unsplash.com/photo-1633167606207-d840b5070fc2?auto=format&fit=crop&q=80&w=800" },
             { id: 3, name: "staring sadie", price: 25, img: "staring-sadie.jpg" },
-            { id: 4, name: "notaspoon", price: 30, img: "logo-icon.jpg" },
+            { id: 4, name: "notaspoon", price: 30, img: "logo-icon.jpg", link: "https://buy.stripe.com/00wbJ2bJJ2qYauHaEf57W05" },
             { id: 5, name: "print 005", price: 35, img: "https://images.unsplash.com/photo-1618556450991-2f1af64e8191?auto=format&fit=crop&q=80&w=800" }
         ];
 
@@ -112,6 +112,27 @@
                 const card = document.createElement('div');
                 card.className = "product-card flex flex-col";
 
+                let buttonHtml = '';
+                if (product.link) {
+                    buttonHtml = `
+                        <a
+                            href="${product.link}"
+                            class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors inline-block text-center"
+                        >
+                            buy
+                        </a>
+                    `;
+                } else {
+                    buttonHtml = `
+                        <button
+                            onclick="console.log('bought')"
+                            class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors"
+                        >
+                            buy
+                        </button>
+                    `;
+                }
+
                 card.innerHTML = `
                     <div class="bg-gray-100 mb-6 overflow-hidden rounded-sm">
                         <img
@@ -123,12 +144,7 @@
                     <div class="flex flex-col items-start">
                         <h3 class="text-lg font-semibold mb-1 lowercase">${product.name}</h3>
                         <div class="text-sm text-gray-500 mb-4">$${price}.00</div>
-                        <button
-                            onclick="console.log('bought')"
-                            class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors"
-                        >
-                            buy
-                        </button>
+                        ${buttonHtml}
                     </div>
                 `;
 
