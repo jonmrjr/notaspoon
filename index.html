@@ -22,11 +22,82 @@
         }
 
         .product-card {
-            transition: transform 0.2s ease;
+            transition: transform 0.4s cubic-bezier(.2,.9,.2,1), opacity 0.4s ease;
+            opacity: 0;
+            transform: translateY(18px);
         }
 
-        .product-card:hover {
-            transform: translateY(-2px);
+        .product-card.in-view {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Child reveals with small stagger when the card becomes visible */
+        .product-card .product-image,
+        .product-card .product-name,
+        .product-card .product-price,
+        .product-card .buy-btn {
+            opacity: 0;
+            transform: translateY(12px);
+            transition: opacity 360ms cubic-bezier(.2,.9,.2,1), transform 360ms cubic-bezier(.2,.9,.2,1);
+        }
+
+        .product-card.in-view .product-image {
+            opacity: 1;
+            transform: translateY(0);
+            transition-delay: 0s;
+        }
+
+        .product-card.in-view .product-name {
+            opacity: 1;
+            transform: translateY(0);
+            transition-delay: 80ms;
+        }
+
+        .product-card.in-view .product-price {
+            opacity: 1;
+            transform: translateY(0);
+            transition-delay: 160ms;
+        }
+
+        .product-card.in-view .buy-btn {
+            opacity: 1;
+            transform: translateY(0);
+            transition-delay: 240ms;
+        }
+
+        .product-image {
+            width: 100%;
+            height: 360px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .price {
+            font-weight: 700;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 60;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 1.25rem;
+            border-radius: 8px;
+            max-width: 420px;
+            width: 100%;
         }
 
         /* Hidden by default */
@@ -48,11 +119,7 @@
             <div class="flex items-center gap-3">
                 <!-- Stylized SVG Logo -->
                 <img src="logo-icon.jpg" alt="Logo" class="w-6 h-6 rounded-sm object-cover">
-                <!-- Inline product photo added next to the title. Place the image file at assets/notaspoon-product.jpg -->
-                <h1 class="text-xl font-bold tracking-tighter lowercase flex items-center gap-2">
-                    <img src="assets/notaspoon-product.jpg" alt="notaspoon product" class="w-8 h-8 rounded-sm object-cover">
-                    <span>notaspoon.com</span>
-                </h1>
+                <h1 class="text-xl font-bold tracking-tighter lowercase">notaspoon.com</h1>
             </div>
             <nav class="flex gap-6 text-sm font-medium">
                 <button onclick="toggleAbout()" class="hover:underline transition">about</button>
@@ -70,23 +137,32 @@
 
         <!-- Product Feed -->
         <div id="product-feed" class="flex flex-col gap-24">
-            <!-- Single product card added with the provided product photo. Save the image at assets/notaspoon-product.jpg -->
-            <article class="product-card grid grid-cols-1 gap-6">
-                <div class="rounded-md overflow-hidden border border-gray-100">
-                    <img src="assets/notaspoon-product.jpg" alt="notaspoon product" class="w-full h-64 object-cover">
+
+            <!-- Product card: starts hidden and reveals on scroll -->
+            <article class="product-card rounded-md overflow-hidden border border-gray-100 shadow-sm grid grid-cols-1 gap-6 p-4"
+                     data-name="Heart Frame" data-price="$120">
+                <div class="rounded-md overflow-hidden">
+                    <!-- Place product image at assets/notaspoon-product.jpg -->
+                    <img src="assets/notaspoon-product.jpg" alt="Heart Frame - notaspoon" class="product-image">
                 </div>
                 <div class="text-left">
-                    <h3 class="text-2xl font-semibold">notaspoon print (one-of-a-kind)</h3>
-                    <p class="text-gray-600 mt-2">One digital print from the notaspoon collection. Each piece is an
-                        exploration of everyday objects reimagined.</p>
-                    <div class="mt-4">
-                        <a href="#" class="inline-block bg-black text-white px-4 py-2 rounded-sm text-sm">View
-                            product</a>
+                    <h3 class="text-2xl font-semibold product-name">Heart Frame</h3>
+                    <p class="text-gray-600 mt-2 product-desc">A colorful one-of-a-kind print from the notaspoon collection. Printed on archival paper.</p>
+                    <div class="mt-4 flex items-center justify-between gap-4">
+                        <div>
+                            <div class="text-sm text-gray-500">price</div>
+                            <div class="price text-xl product-price">$120</div>
+                        </div>
+                        <div>
+                            <!-- Buy button opens a minimal checkout modal -->
+                            <button class="buy-btn px-4 py-2 bg-black text-white rounded-sm">Buy</button>
+                        </div>
                     </div>
                 </div>
             </article>
 
-            <!-- Existing products (if any) will go below -->
+            <!-- Placeholder for additional products if desired -->
+
         </div>
 
         <div class="mt-32 text-left text-gray-400 py-12 border-t border-gray-100">
@@ -110,11 +186,71 @@
         </div>
     </div>
 
+    <!-- Buy Modal -->
+    <div id="buy-modal" class="modal" role="dialog" aria-modal="true">
+        <div class="modal-content">
+            <h4 id="modal-product-name" class="text-lg font-semibold">Buy</h4>
+            <p id="modal-product-price" class="mt-2 text-gray-700">Price</p>
+            <div class="mt-4">
+                <a id="checkout-link" href="#" class="inline-block bg-black text-white px-4 py-2 rounded-sm">Proceed to checkout</a>
+                <button onclick="closeBuyModal()" class="ml-2 px-3 py-2 border rounded">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         function toggleAbout() {
             const modal = document.getElementById('about-modal');
             modal.classList.toggle('active');
         }
+
+        // IntersectionObserver to reveal product cards and their children when they scroll into view
+        document.addEventListener('DOMContentLoaded', function () {
+            const productCards = document.querySelectorAll('.product-card');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('in-view');
+                    }
+                });
+            }, { threshold: 0.18 });
+
+            productCards.forEach(card => observer.observe(card));
+
+            // Buy modal logic — uses mailto as a simple checkout fallback
+            const buyModal = document.getElementById('buy-modal');
+            const modalName = document.getElementById('modal-product-name');
+            const modalPrice = document.getElementById('modal-product-price');
+            const checkoutLink = document.getElementById('checkout-link');
+
+            productCards.forEach(card => {
+                const buyBtn = card.querySelector('.buy-btn');
+                if (!buyBtn) return;
+
+                buyBtn.addEventListener('click', function () {
+                    const name = card.dataset.name || (card.querySelector('.product-name') && card.querySelector('.product-name').textContent) || 'Product';
+                    const price = card.dataset.price || (card.querySelector('.product-price') && card.querySelector('.product-price').textContent) || '';
+                    modalName.textContent = name;
+                    modalPrice.textContent = price;
+
+                    // Simple mailto checkout link (replace with real payment link if available)
+                    const subject = encodeURIComponent('Purchase inquiry: ' + name);
+                    const body = encodeURIComponent('Hi — I would like to purchase "' + name + '" priced at ' + price + '. Please send purchase details.');
+                    checkoutLink.setAttribute('href', 'mailto:hello@notaspoon.com?subject=' + subject + '&body=' + body);
+
+                    buyModal.classList.add('active');
+                });
+            });
+
+            window.closeBuyModal = function() {
+                buyModal.classList.remove('active');
+            }
+
+            // Close modal on outside click
+            buyModal.addEventListener('click', function(e) {
+                if (e.target === buyModal) closeBuyModal();
+            });
+        });
     </script>
 
 </body>
