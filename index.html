@@ -77,9 +77,9 @@
     </main>
 
     <!-- About Modal -->
-    <div id="about-modal" class="fixed inset-0 z-50 bg-white/95 backdrop-blur-sm flex items-center justify-center p-6">
+    <div id="about-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-hidden="true" class="fixed inset-0 z-50 bg-white/95 backdrop-blur-sm flex items-center justify-center p-6">
         <div class="max-w-md w-full">
-            <h3 class="text-2xl font-bold mb-4">about notaspoon.com</h3>
+            <h3 id="modal-title" class="text-2xl font-bold mb-4">about notaspoon.com</h3>
             <p class="text-gray-600 mb-8 leading-relaxed">
                 notaspoon.com is a curated collection of one-of-a-kind prints and digital artifacts.
                 Everything you see here is designed to challenge the utility of everyday objects.
@@ -101,7 +101,22 @@
 
         function toggleAbout() {
             const modal = document.getElementById('about-modal');
-            modal.classList.toggle('active');
+            const isActive = modal.classList.toggle('active');
+
+            if (isActive) {
+                toggleAbout.lastFocus = document.activeElement;
+                modal.setAttribute('aria-hidden', 'false');
+                modal.querySelector('button').focus();
+                document.addEventListener('keydown', handleModalKeydown);
+            } else {
+                modal.setAttribute('aria-hidden', 'true');
+                document.removeEventListener('keydown', handleModalKeydown);
+                if (toggleAbout.lastFocus) toggleAbout.lastFocus.focus();
+            }
+        }
+
+        function handleModalKeydown(e) {
+            if (e.key === 'Escape') toggleAbout();
         }
 
         function renderProducts() {
