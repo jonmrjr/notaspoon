@@ -119,6 +119,24 @@
             if (e.key === 'Escape') toggleAbout();
         }
 
+        function handleBuy(btn, productName) {
+            // Visual feedback
+            const originalText = btn.innerText;
+            btn.innerText = "added!";
+            btn.classList.add("bg-black", "text-white");
+            btn.setAttribute("aria-pressed", "true");
+
+            // Console log as per original functionality
+            console.log(`bought ${productName}`);
+
+            // Revert after 2 seconds
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.classList.remove("bg-black", "text-white");
+                btn.removeAttribute("aria-pressed");
+            }, 2000);
+        }
+
         function renderProducts() {
             const feed = document.getElementById('product-feed');
 
@@ -132,6 +150,7 @@
                     buttonHtml = `
                         <a
                             href="${product.link}"
+                            aria-label="Buy ${product.name}"
                             class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors inline-block text-center"
                         >
                             buy
@@ -140,7 +159,8 @@
                 } else {
                     buttonHtml = `
                         <button
-                            onclick="console.log('bought')"
+                            onclick="handleBuy(this, '${product.name.replace(/'/g, "\\'")}')"
+                            aria-label="Buy ${product.name}"
                             class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors"
                         >
                             buy
