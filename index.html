@@ -119,6 +119,27 @@
             if (e.key === 'Escape') toggleAbout();
         }
 
+        function handleBuy(btn, name) {
+            // Prevent race condition if already added
+            if (btn.getAttribute('data-status') === 'added') return;
+
+            const originalText = btn.innerText;
+
+            // Visual feedback state
+            btn.setAttribute('data-status', 'added');
+            btn.innerText = "added!";
+            btn.classList.add('bg-black', 'text-white');
+
+            // Revert after 2 seconds
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.classList.remove('bg-black', 'text-white');
+                btn.removeAttribute('data-status');
+            }, 2000);
+
+            console.log(`bought ${name}`);
+        }
+
         function renderProducts() {
             const feed = document.getElementById('product-feed');
 
@@ -127,42 +148,42 @@
                 const card = document.createElement('div');
                 card.className = "product-card flex flex-col";
 
-                let buttonHtml = '';
-                if (product.link) {
-                    buttonHtml = `
-                        <a
-                            href="${product.link}"
-                            class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors inline-block text-center"
-                        >
-                            buy
-                        </a>
-                    `;
-                } else {
-                    buttonHtml = `
-                        <button
-                            onclick="console.log('bought')"
-                            class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors"
-                        >
-                            buy
-                        </button>
-                    `;
-                }
-
-                card.innerHTML = `
-                    <div class="bg-gray-100 mb-6 overflow-hidden rounded-sm">
-                        <img
-                            src="${product.img}"
-                            alt="${product.name}"
-                            class="w-full h-auto transition-all duration-700"
-                        >
-                    </div>
-                    <div class="flex flex-col items-start">
-                        <h3 class="text-lg font-semibold mb-1 lowercase">${product.name}</h3>
-                        <div class="text-sm text-gray-500 mb-4">$${price}.00</div>
-                        ${buttonHtml}
-                    </div>
+                // Create inner content first
+                const imageContainer = document.createElement('div');
+                imageContainer.className = "bg-gray-100 mb-6 overflow-hidden rounded-sm";
+                imageContainer.innerHTML = `
+                    <img
+                        src="${product.img}"
+                        alt="${product.name}"
+                        class="w-full h-auto transition-all duration-700"
+                    >
                 `;
 
+                const contentContainer = document.createElement('div');
+                contentContainer.className = "flex flex-col items-start";
+                contentContainer.innerHTML = `
+                    <h3 class="text-lg font-semibold mb-1 lowercase">${product.name}</h3>
+                    <div class="text-sm text-gray-500 mb-4">$${price}.00</div>
+                `;
+
+                // Create button safely to avoid XSS
+                let actionEl;
+                if (product.link) {
+                    actionEl = document.createElement('a');
+                    actionEl.href = product.link;
+                    actionEl.className = "px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors inline-block text-center";
+                    actionEl.innerText = "buy";
+                } else {
+                    actionEl = document.createElement('button');
+                    actionEl.className = "px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors";
+                    actionEl.innerText = "buy";
+                    actionEl.onclick = function() { handleBuy(this, product.name); };
+                }
+                actionEl.setAttribute('aria-label', `Buy ${product.name}`);
+
+                contentContainer.appendChild(actionEl);
+                card.appendChild(imageContainer);
+                card.appendChild(contentContainer);
                 feed.appendChild(card);
             });
         }
