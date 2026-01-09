@@ -119,6 +119,29 @@
             if (e.key === 'Escape') toggleAbout();
         }
 
+        function handleBuy(btn, productName) {
+            // We use innerText to preserve the button size mostly, but here we just replace text.
+            // Using innerText instead of textContent can sometimes behave differently with rendering.
+
+            const originalText = 'buy'; // We know it is 'buy' from the template.
+
+            // Visual feedback
+            btn.innerHTML = 'added!';
+            btn.classList.add('bg-black', 'text-white');
+            btn.setAttribute('data-status', 'added');
+            btn.setAttribute('aria-label', `Added ${productName} to cart`);
+            btn.disabled = true;
+
+            // Reset after 1.5s
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.classList.remove('bg-black', 'text-white');
+                btn.removeAttribute('data-status');
+                btn.setAttribute('aria-label', `Buy ${productName}`);
+                btn.disabled = false;
+            }, 1500);
+        }
+
         function renderProducts() {
             const feed = document.getElementById('product-feed');
 
@@ -132,15 +155,19 @@
                     buttonHtml = `
                         <a
                             href="${product.link}"
+                            aria-label="Buy ${product.name}"
                             class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors inline-block text-center"
                         >
                             buy
                         </a>
                     `;
                 } else {
+                    // Escape quotes in product name for the function call
+                    const safeName = product.name.replace(/'/g, "\\'");
                     buttonHtml = `
                         <button
-                            onclick="console.log('bought')"
+                            onclick="handleBuy(this, '${safeName}')"
+                            aria-label="Buy ${product.name}"
                             class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors"
                         >
                             buy
