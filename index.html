@@ -119,6 +119,35 @@
             if (e.key === 'Escape') toggleAbout();
         }
 
+        function handleBuy(btn) {
+            if (btn.dataset.processing === "true") return;
+
+            const originalText = btn.innerHTML;
+
+            // Set processing state
+            btn.dataset.processing = "true";
+
+            // Change text
+            btn.innerHTML = "added!";
+
+            // Apply styles directly to ensure specific visual feedback
+            btn.style.backgroundColor = "black";
+            btn.style.color = "white";
+            btn.style.transform = "scale(1.05)";
+
+            // Revert after 2 seconds
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+
+                // Reset styles
+                btn.style.backgroundColor = "";
+                btn.style.color = "";
+                btn.style.transform = "";
+
+                delete btn.dataset.processing;
+            }, 2000);
+        }
+
         function renderProducts() {
             const feed = document.getElementById('product-feed');
 
@@ -132,7 +161,8 @@
                     buttonHtml = `
                         <a
                             href="${product.link}"
-                            class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors inline-block text-center"
+                            class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-all duration-200 inline-block text-center"
+                            aria-label="Buy ${product.name}"
                         >
                             buy
                         </a>
@@ -140,8 +170,9 @@
                 } else {
                     buttonHtml = `
                         <button
-                            onclick="console.log('bought')"
-                            class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors"
+                            onclick="handleBuy(this)"
+                            class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-all duration-200"
+                            aria-label="Buy ${product.name}"
                         >
                             buy
                         </button>
