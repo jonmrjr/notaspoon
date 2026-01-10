@@ -119,6 +119,30 @@
             if (e.key === 'Escape') toggleAbout();
         }
 
+        function handleBuy(btn) {
+            if (btn.getAttribute('data-status') === 'added') return;
+
+            const productName = btn.getAttribute('data-name');
+            // We use trim() because textContent might have newlines/spaces
+            const originalText = btn.innerHTML; // Store HTML structure including whitespace
+            btn.setAttribute('data-status', 'added');
+
+            // Just set it directly, stripping any whitespace
+            btn.innerHTML = 'added!';
+
+            btn.setAttribute('aria-label', `${productName} added to cart`);
+
+            // Apply active styles
+            btn.classList.add('bg-black', 'text-white');
+
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.removeAttribute('data-status');
+                btn.setAttribute('aria-label', `buy ${productName}`);
+                btn.classList.remove('bg-black', 'text-white');
+            }, 1500);
+        }
+
         function renderProducts() {
             const feed = document.getElementById('product-feed');
 
@@ -132,6 +156,7 @@
                     buttonHtml = `
                         <a
                             href="${product.link}"
+                            aria-label="buy ${product.name}"
                             class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors inline-block text-center"
                         >
                             buy
@@ -140,7 +165,9 @@
                 } else {
                     buttonHtml = `
                         <button
-                            onclick="console.log('bought')"
+                            onclick="handleBuy(this)"
+                            data-name="${product.name}"
+                            aria-label="buy ${product.name}"
                             class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors"
                         >
                             buy
