@@ -132,6 +132,7 @@
                     buttonHtml = `
                         <a
                             href="${product.link}"
+                            aria-label="buy ${product.name}"
                             class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors inline-block text-center"
                         >
                             buy
@@ -141,6 +142,7 @@
                     buttonHtml = `
                         <button
                             onclick="console.log('bought')"
+                            aria-label="buy ${product.name}"
                             class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors"
                         >
                             buy
