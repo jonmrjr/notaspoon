@@ -119,6 +119,25 @@
             if (e.key === 'Escape') toggleAbout();
         }
 
+        function handleBuy(btn) {
+            // Prevent multiple clicks while feedback is active
+            if (btn.getAttribute("aria-pressed") === "true") return;
+
+            // Visual feedback
+            const originalText = "buy"; // Hardcoded as it's always "buy"
+            btn.innerHTML = "added!";
+            btn.classList.add("bg-black", "text-white");
+            btn.setAttribute("aria-pressed", "true");
+
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.classList.remove("bg-black", "text-white");
+                btn.setAttribute("aria-pressed", "false");
+            }, 2000);
+
+            console.log('bought');
+        }
+
         function renderProducts() {
             const feed = document.getElementById('product-feed');
 
@@ -132,6 +151,7 @@
                     buttonHtml = `
                         <a
                             href="${product.link}"
+                            aria-label="Buy ${product.name} for $${price}.00 - opens external link"
                             class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors inline-block text-center"
                         >
                             buy
@@ -140,7 +160,8 @@
                 } else {
                     buttonHtml = `
                         <button
-                            onclick="console.log('bought')"
+                            onclick="handleBuy(this)"
+                            aria-label="Buy ${product.name} for $${price}.00"
                             class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors"
                         >
                             buy
