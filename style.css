@@ -503,3 +503,21 @@ button:focus-visible {
 .ui-panel.minimized .excitement span {
     font-size: 18px;
 }
+
+/* Keyboard shortcut hints */
+kbd {
+    display: inline-block;
+    padding: 2px 6px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 12px;
+    font-weight: bold;
+    line-height: 1.2;
+    color: #fff;
+    vertical-align: middle;
+    background-color: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.4);
+    margin: 0 2px;
+    text-transform: uppercase;
+}
