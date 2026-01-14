@@ -119,6 +119,30 @@
             if (e.key === 'Escape') toggleAbout();
         }
 
+        function handleBuy(btn) {
+            if (btn.dataset.state === 'added') return;
+
+            const originalText = btn.textContent;
+            const originalLabel = btn.getAttribute('aria-label');
+            const productName = btn.getAttribute('data-name');
+
+            btn.dataset.state = 'added';
+            btn.textContent = "added!";
+            if (productName) {
+                btn.setAttribute('aria-label', `Added ${productName} to cart`);
+            }
+            btn.classList.add('bg-black', 'text-white');
+
+            setTimeout(() => {
+                btn.textContent = originalText;
+                if (originalLabel) {
+                    btn.setAttribute('aria-label', originalLabel);
+                }
+                btn.classList.remove('bg-black', 'text-white');
+                btn.dataset.state = 'idle';
+            }, 2000);
+        }
+
         function renderProducts() {
             const feed = document.getElementById('product-feed');
 
@@ -132,6 +156,7 @@
                     buttonHtml = `
                         <a
                             href="${product.link}"
+                            aria-label="buy ${product.name} for $${price}"
                             class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors inline-block text-center"
                         >
                             buy
@@ -140,7 +165,9 @@
                 } else {
                     buttonHtml = `
                         <button
-                            onclick="console.log('bought')"
+                            onclick="handleBuy(this)"
+                            data-name="${product.name}"
+                            aria-label="buy ${product.name} for $${price}"
                             class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors"
                         >
                             buy
