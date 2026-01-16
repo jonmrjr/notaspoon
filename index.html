@@ -119,6 +119,24 @@
             if (e.key === 'Escape') toggleAbout();
         }
 
+        function handleBuy(btn) {
+            const originalText = "buy";
+            const productName = btn.getAttribute('data-name');
+
+            // Visual feedback
+            btn.textContent = "added!";
+            btn.setAttribute('aria-label', `Added ${productName} to cart`);
+            btn.classList.add('bg-black', 'text-white');
+
+            // Reset after 2 seconds
+            if (btn.resetTimer) clearTimeout(btn.resetTimer);
+            btn.resetTimer = setTimeout(() => {
+                btn.textContent = originalText;
+                btn.setAttribute('aria-label', `buy ${productName}`);
+                btn.classList.remove('bg-black', 'text-white');
+            }, 2000);
+        }
+
         function renderProducts() {
             const feed = document.getElementById('product-feed');
 
@@ -132,6 +150,7 @@
                     buttonHtml = `
                         <a
                             href="${product.link}"
+                            aria-label="buy ${product.name}"
                             class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors inline-block text-center"
                         >
                             buy
@@ -140,7 +159,9 @@
                 } else {
                     buttonHtml = `
                         <button
-                            onclick="console.log('bought')"
+                            onclick="handleBuy(this)"
+                            data-name="${product.name}"
+                            aria-label="buy ${product.name}"
                             class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors"
                         >
                             buy
