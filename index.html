@@ -119,6 +119,30 @@
             if (e.key === 'Escape') toggleAbout();
         }
 
+        function handleBuy(btn) {
+            // Prevent multiple clicks if needed, or just let it update
+            if (btn.getAttribute('data-state') === 'added') return;
+
+            const originalText = btn.textContent;
+            const productName = btn.getAttribute('data-name');
+
+            // Update state
+            btn.setAttribute('data-state', 'added');
+            btn.textContent = "added!";
+            btn.setAttribute('aria-label', `Added ${productName} to cart`);
+
+            // Visual feedback (using Tailwind classes)
+            btn.classList.add('bg-black', 'text-white');
+
+            // Revert after 2 seconds
+            setTimeout(() => {
+                btn.removeAttribute('data-state');
+                btn.textContent = originalText;
+                btn.setAttribute('aria-label', `Buy ${productName}`);
+                btn.classList.remove('bg-black', 'text-white');
+            }, 2000);
+        }
+
         function renderProducts() {
             const feed = document.getElementById('product-feed');
 
@@ -132,6 +156,7 @@
                     buttonHtml = `
                         <a
                             href="${product.link}"
+                            aria-label="Buy ${product.name} on external site"
                             class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors inline-block text-center"
                         >
                             buy
@@ -140,7 +165,9 @@
                 } else {
                     buttonHtml = `
                         <button
-                            onclick="console.log('bought')"
+                            onclick="handleBuy(this)"
+                            data-name="${product.name}"
+                            aria-label="Buy ${product.name}"
                             class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors"
                         >
                             buy
