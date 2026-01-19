@@ -119,6 +119,30 @@
             if (e.key === 'Escape') toggleAbout();
         }
 
+        function handleBuy(btn) {
+            // Check state to prevent race conditions
+            if (btn.dataset.state === 'added') return;
+
+            const originalText = btn.textContent;
+            const productName = btn.dataset.name;
+
+            // Update state
+            btn.dataset.state = 'added';
+            btn.textContent = "added!";
+            btn.setAttribute('aria-label', `Added ${productName} to cart`);
+
+            // Visual feedback - invert colors
+            btn.classList.add('bg-black', 'text-white');
+
+            // Revert after 2 seconds
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.removeAttribute('data-state');
+                btn.setAttribute('aria-label', `buy ${productName}`);
+                btn.classList.remove('bg-black', 'text-white');
+            }, 2000);
+        }
+
         function renderProducts() {
             const feed = document.getElementById('product-feed');
 
@@ -132,6 +156,7 @@
                     buttonHtml = `
                         <a
                             href="${product.link}"
+                            aria-label="buy ${product.name}"
                             class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors inline-block text-center"
                         >
                             buy
@@ -140,7 +165,9 @@
                 } else {
                     buttonHtml = `
                         <button
-                            onclick="console.log('bought')"
+                            onclick="handleBuy(this)"
+                            data-name="${product.name}"
+                            aria-label="buy ${product.name}"
                             class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors"
                         >
                             buy
