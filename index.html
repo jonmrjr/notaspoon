@@ -119,6 +119,32 @@
             if (e.key === 'Escape') toggleAbout();
         }
 
+        function handleBuy(btn, productName) {
+            // Prevent double clicks
+            if (btn.getAttribute('data-state') === 'added') return;
+
+            // Visual feedback
+            const originalText = btn.textContent;
+            btn.textContent = "added!";
+            btn.classList.add('bg-black', 'text-white');
+            btn.classList.remove('hover:bg-black', 'hover:text-white');
+            btn.setAttribute('data-state', 'added');
+            btn.setAttribute('aria-pressed', 'true');
+            btn.setAttribute('aria-label', `Added ${productName} to cart`);
+
+            console.log(`bought ${productName}`);
+
+            // Reset after 2 seconds
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.classList.remove('bg-black', 'text-white');
+                btn.classList.add('hover:bg-black', 'hover:text-white');
+                btn.removeAttribute('data-state');
+                btn.setAttribute('aria-pressed', 'false');
+                btn.setAttribute('aria-label', `Add ${productName} to cart`);
+            }, 2000);
+        }
+
         function renderProducts() {
             const feed = document.getElementById('product-feed');
 
@@ -133,6 +159,7 @@
                         <a
                             href="${product.link}"
                             class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors inline-block text-center"
+                            aria-label="Buy ${product.name} on external site"
                         >
                             buy
                         </a>
@@ -140,8 +167,11 @@
                 } else {
                     buttonHtml = `
                         <button
-                            onclick="console.log('bought')"
+                            data-name="${product.name}"
+                            onclick="handleBuy(this, this.getAttribute('data-name'))"
                             class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors"
+                            aria-label="Add ${product.name} to cart"
+                            aria-pressed="false"
                         >
                             buy
                         </button>
