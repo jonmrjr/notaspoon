@@ -119,6 +119,25 @@
             if (e.key === 'Escape') toggleAbout();
         }
 
+        function handleBuy(btn, productName) {
+            if (btn.dataset.state === 'added') return;
+
+            const originalText = btn.textContent;
+            btn.dataset.state = 'added';
+            btn.textContent = 'added!';
+            btn.setAttribute('aria-label', `Added ${productName} to cart`);
+
+            // Toggle visual state
+            btn.classList.add('bg-black', 'text-white');
+
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.removeAttribute('data-state');
+                btn.setAttribute('aria-label', `Buy ${productName}`);
+                btn.classList.remove('bg-black', 'text-white');
+            }, 2000);
+        }
+
         function renderProducts() {
             const feed = document.getElementById('product-feed');
 
@@ -133,6 +152,7 @@
                         <a
                             href="${product.link}"
                             class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors inline-block text-center"
+                            aria-label="Buy ${product.name}"
                         >
                             buy
                         </a>
@@ -140,8 +160,9 @@
                 } else {
                     buttonHtml = `
                         <button
-                            onclick="console.log('bought')"
+                            onclick="handleBuy(this, '${product.name}')"
                             class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors"
+                            aria-label="Buy ${product.name}"
                         >
                             buy
                         </button>
