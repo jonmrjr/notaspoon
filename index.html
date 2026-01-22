@@ -47,7 +47,7 @@
         <div class="max-w-4xl mx-auto px-6 py-6 flex justify-between items-center">
             <div class="flex items-center gap-3">
                 <!-- Stylized SVG Logo -->
-                <img src="logo-icon.jpg" alt="Logo" class="w-6 h-6 rounded-sm object-cover">
+                <img src="logo-icon.jpg" alt="notaspoon.com logo" class="w-6 h-6 rounded-sm object-cover">
                 <h1 class="text-xl font-bold tracking-tighter lowercase">notaspoon.com</h1>
             </div>
             <nav class="flex gap-6 text-sm font-medium">
@@ -119,6 +119,32 @@
             if (e.key === 'Escape') toggleAbout();
         }
 
+        function handleBuy(btn) {
+            // Prevent multiple clicks if already "added"
+            if (btn.dataset.state === 'added') return;
+
+            const originalText = "buy"; // Reset text
+            const productName = btn.dataset.name;
+
+            // Visual feedback state
+            btn.dataset.state = 'added';
+            btn.textContent = 'added!';
+            // Use inline styles to ensure visibility regardless of Tailwind JIT state
+            btn.style.backgroundColor = 'black';
+            btn.style.color = 'white';
+
+            btn.setAttribute('aria-label', `Added ${productName} to cart`);
+
+            // Revert after 2 seconds
+            setTimeout(() => {
+                btn.dataset.state = '';
+                btn.textContent = originalText;
+                btn.style.backgroundColor = '';
+                btn.style.color = '';
+                btn.setAttribute('aria-label', `Buy ${productName}`);
+            }, 2000);
+        }
+
         function renderProducts() {
             const feed = document.getElementById('product-feed');
 
@@ -127,12 +153,16 @@
                 const card = document.createElement('div');
                 card.className = "product-card flex flex-col";
 
+                // Ensure quotes in names don't break HTML
+                const safeName = product.name.replace(/"/g, '&quot;');
+
                 let buttonHtml = '';
                 if (product.link) {
                     buttonHtml = `
                         <a
                             href="${product.link}"
                             class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors inline-block text-center"
+                            aria-label="Buy ${product.name} on Stripe"
                         >
                             buy
                         </a>
@@ -140,8 +170,10 @@
                 } else {
                     buttonHtml = `
                         <button
-                            onclick="console.log('bought')"
+                            onclick="handleBuy(this)"
+                            data-name="${safeName}"
                             class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors"
+                            aria-label="Buy ${product.name}"
                         >
                             buy
                         </button>
