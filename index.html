@@ -119,6 +119,26 @@
             if (e.key === 'Escape') toggleAbout();
         }
 
+        function handleBuy(btn) {
+            if (btn.dataset.state === 'added') return;
+
+            const originalText = btn.textContent;
+
+            // Visual feedback
+            btn.textContent = "added!";
+            btn.style.backgroundColor = "black";
+            btn.style.color = "white";
+            btn.dataset.state = 'added';
+
+            // Revert after 2s
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.style.backgroundColor = "";
+                btn.style.color = "";
+                btn.dataset.state = 'idle';
+            }, 2000);
+        }
+
         function renderProducts() {
             const feed = document.getElementById('product-feed');
 
@@ -126,12 +146,14 @@
                 const price = product.price;
                 const card = document.createElement('div');
                 card.className = "product-card flex flex-col";
+                const ariaLabel = `Buy ${product.name} for $${price}.00`;
 
                 let buttonHtml = '';
                 if (product.link) {
                     buttonHtml = `
                         <a
                             href="${product.link}"
+                            aria-label="${ariaLabel}"
                             class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors inline-block text-center"
                         >
                             buy
@@ -140,7 +162,9 @@
                 } else {
                     buttonHtml = `
                         <button
-                            onclick="console.log('bought')"
+                            onclick="handleBuy(this)"
+                            data-name="${product.name}"
+                            aria-label="${ariaLabel}"
                             class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors"
                         >
                             buy
