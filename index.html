@@ -119,6 +119,30 @@
             if (e.key === 'Escape') toggleAbout();
         }
 
+        function handleBuy(btn) {
+            // Prevent multiple clicks
+            if (btn.dataset.state === 'added') return;
+
+            const originalText = btn.textContent.trim();
+            const productName = btn.dataset.name;
+
+            // Visual feedback
+            btn.textContent = "added!";
+            btn.style.backgroundColor = "black";
+            btn.style.color = "white";
+            btn.dataset.state = 'added';
+            btn.setAttribute('aria-label', `added ${productName} to cart`);
+
+            // Revert after delay
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.style.backgroundColor = "";
+                btn.style.color = "";
+                delete btn.dataset.state;
+                btn.setAttribute('aria-label', `buy ${productName}`);
+            }, 1000);
+        }
+
         function renderProducts() {
             const feed = document.getElementById('product-feed');
 
@@ -132,6 +156,7 @@
                     buttonHtml = `
                         <a
                             href="${product.link}"
+                            aria-label="buy ${product.name} on external site"
                             class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors inline-block text-center"
                         >
                             buy
@@ -140,7 +165,9 @@
                 } else {
                     buttonHtml = `
                         <button
-                            onclick="console.log('bought')"
+                            onclick="handleBuy(this)"
+                            data-name="${product.name}"
+                            aria-label="buy ${product.name}"
                             class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors"
                         >
                             buy
