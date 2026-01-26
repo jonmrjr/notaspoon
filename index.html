@@ -119,6 +119,32 @@
             if (e.key === 'Escape') toggleAbout();
         }
 
+        function handleBuy(btn) {
+            if (btn.dataset.state === 'added') return;
+
+            const originalText = "buy";
+            const productName = btn.dataset.name;
+
+            // Visual feedback
+            btn.textContent = "added!";
+            btn.dataset.state = 'added';
+
+            // Apply visual style directly to ensure it overrides hover state temporarily
+            // Note: In a real React/Vue app we'd use state, here we use inline styles for reliability
+            btn.style.backgroundColor = "black";
+            btn.style.color = "white";
+
+            btn.setAttribute('aria-label', `Added ${productName} to cart`);
+
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.dataset.state = '';
+                btn.style.backgroundColor = "";
+                btn.style.color = "";
+                btn.setAttribute('aria-label', `buy ${productName}`);
+            }, 1000);
+        }
+
         function renderProducts() {
             const feed = document.getElementById('product-feed');
 
@@ -132,6 +158,7 @@
                     buttonHtml = `
                         <a
                             href="${product.link}"
+                            aria-label="buy ${product.name} on external site"
                             class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors inline-block text-center"
                         >
                             buy
@@ -140,7 +167,9 @@
                 } else {
                     buttonHtml = `
                         <button
-                            onclick="console.log('bought')"
+                            onclick="handleBuy(this)"
+                            aria-label="buy ${product.name}"
+                            data-name="${product.name}"
                             class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors"
                         >
                             buy
