@@ -119,6 +119,32 @@
             if (e.key === 'Escape') toggleAbout();
         }
 
+        function handleBuy(btn) {
+            // Prevent multiple clicks if already "added!"
+            if (btn.getAttribute('data-state') === 'added') return;
+
+            const originalText = btn.textContent.trim();
+            const originalLabel = btn.getAttribute('aria-label');
+
+            // Visual feedback
+            btn.textContent = "added!";
+            btn.style.backgroundColor = 'black';
+            btn.style.color = 'white';
+            btn.setAttribute('data-state', 'added');
+            btn.setAttribute('aria-label', 'Added to cart');
+
+            // Revert after 1 second
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.style.backgroundColor = '';
+                btn.style.color = '';
+                btn.removeAttribute('data-state');
+                if (originalLabel) {
+                    btn.setAttribute('aria-label', originalLabel);
+                }
+            }, 1000);
+        }
+
         function renderProducts() {
             const feed = document.getElementById('product-feed');
 
@@ -128,11 +154,15 @@
                 card.className = "product-card flex flex-col";
 
                 let buttonHtml = '';
+                // Common focus styles for accessibility
+                const focusStyles = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2";
+
                 if (product.link) {
                     buttonHtml = `
                         <a
                             href="${product.link}"
-                            class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors inline-block text-center"
+                            aria-label="buy ${product.name} on external site"
+                            class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors inline-block text-center ${focusStyles}"
                         >
                             buy
                         </a>
@@ -140,8 +170,9 @@
                 } else {
                     buttonHtml = `
                         <button
-                            onclick="console.log('bought')"
-                            class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors"
+                            onclick="handleBuy(this)"
+                            aria-label="buy ${product.name}"
+                            class="w-32 px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors ${focusStyles}"
                         >
                             buy
                         </button>
