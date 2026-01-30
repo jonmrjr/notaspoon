@@ -119,6 +119,23 @@
             if (e.key === 'Escape') toggleAbout();
         }
 
+        function handleBuy(btn) {
+            if (btn.dataset.state === 'added') return;
+
+            const originalText = btn.textContent;
+            btn.dataset.state = 'added';
+            btn.textContent = 'added!';
+            btn.style.backgroundColor = 'black';
+            btn.style.color = 'white';
+
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.style.backgroundColor = '';
+                btn.style.color = '';
+                btn.dataset.state = '';
+            }, 1000);
+        }
+
         function renderProducts() {
             const feed = document.getElementById('product-feed');
 
@@ -132,7 +149,10 @@
                     buttonHtml = `
                         <a
                             href="${product.link}"
-                            class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors inline-block text-center"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label="buy ${product.name}"
+                            class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors inline-block text-center w-32"
                         >
                             buy
                         </a>
@@ -140,8 +160,9 @@
                 } else {
                     buttonHtml = `
                         <button
-                            onclick="console.log('bought')"
-                            class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors"
+                            onclick="handleBuy(this)"
+                            aria-label="buy ${product.name}"
+                            class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors w-32"
                         >
                             buy
                         </button>
