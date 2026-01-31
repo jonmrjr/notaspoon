@@ -119,6 +119,25 @@
             if (e.key === 'Escape') toggleAbout();
         }
 
+        function handleBuy(btn) {
+            // Prevent double-clicks
+            if (btn.getAttribute('data-state') === 'added') return;
+
+            // Update UI
+            btn.textContent = "added!";
+            btn.style.backgroundColor = "black";
+            btn.style.color = "white";
+            btn.setAttribute('data-state', 'added');
+
+            // Revert after 1s
+            setTimeout(() => {
+                btn.textContent = "buy";
+                btn.style.backgroundColor = "";
+                btn.style.color = "";
+                btn.removeAttribute('data-state');
+            }, 1000);
+        }
+
         function renderProducts() {
             const feed = document.getElementById('product-feed');
 
@@ -128,11 +147,17 @@
                 card.className = "product-card flex flex-col";
 
                 let buttonHtml = '';
+                // Ensure fixed width to prevent layout shift when text changes
+                const btnClasses = "w-32 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors text-center";
+
                 if (product.link) {
                     buttonHtml = `
                         <a
                             href="${product.link}"
-                            class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors inline-block text-center"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label="buy ${product.name} on external site"
+                            class="${btnClasses} inline-block"
                         >
                             buy
                         </a>
@@ -140,8 +165,9 @@
                 } else {
                     buttonHtml = `
                         <button
-                            onclick="console.log('bought')"
-                            class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors"
+                            onclick="handleBuy(this)"
+                            aria-label="buy ${product.name}"
+                            class="${btnClasses}"
                         >
                             buy
                         </button>
