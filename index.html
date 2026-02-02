@@ -119,6 +119,29 @@
             if (e.key === 'Escape') toggleAbout();
         }
 
+        function handleBuy(btn) {
+            // Prevent multiple clicks
+            if (btn.getAttribute('data-state') === 'added') return;
+
+            const originalText = btn.textContent;
+            const originalBg = btn.style.backgroundColor;
+            const originalColor = btn.style.color;
+
+            // Feedback state
+            btn.setAttribute('data-state', 'added');
+            btn.textContent = "added!";
+            btn.style.backgroundColor = "black";
+            btn.style.color = "white";
+
+            // Revert after delay
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.style.backgroundColor = originalBg;
+                btn.style.color = originalColor;
+                btn.removeAttribute('data-state');
+            }, 1000);
+        }
+
         function renderProducts() {
             const feed = document.getElementById('product-feed');
 
@@ -126,13 +149,18 @@
                 const price = product.price;
                 const card = document.createElement('div');
                 card.className = "product-card flex flex-col";
+                const safeName = product.name.replace(/"/g, '&quot;');
 
                 let buttonHtml = '';
+                // Accessible buy action with visual feedback
                 if (product.link) {
                     buttonHtml = `
                         <a
                             href="${product.link}"
-                            class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors inline-block text-center"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label="buy ${safeName} on external site"
+                            class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors inline-block text-center w-32"
                         >
                             buy
                         </a>
@@ -140,8 +168,9 @@
                 } else {
                     buttonHtml = `
                         <button
-                            onclick="console.log('bought')"
-                            class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors"
+                            onclick="handleBuy(this)"
+                            aria-label="buy ${safeName}"
+                            class="px-8 py-2 border border-black text-sm font-bold hover:bg-black hover:text-white transition-colors w-32"
                         >
                             buy
                         </button>
