@@ -83,6 +83,25 @@
             #game-container { width: 580px; height: 580px; }
         }
 
+        #bg-digits {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            text-align: center;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3rem;
+            color: rgba(255, 255, 255, 0.15);
+            pointer-events: none;
+            word-break: break-all;
+            z-index: 0;
+            line-height: 1.2;
+        }
+        @media (min-width: 600px) {
+            #bg-digits { font-size: 5rem; }
+        }
+
         #trace-canvas {
             position: absolute;
             top: 0;
@@ -257,6 +276,7 @@
     </div>
 
     <div id="game-container">
+        <div id="bg-digits"></div>
         <canvas id="trace-canvas"></canvas>
         <div class="outer-ring"></div>
         <div id="center-console">
@@ -272,7 +292,7 @@
     </div>
 
     <script>
-        const piSequence = [3, 1, 4, 1, 5, 9, 2, 6, 5];
+        const piSequence = [3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5, 8, 9, 7, 9, 3, 2, 3, 8, 4, 6, 2, 6, 4, 3, 3, 8, 3, 2, 7];
         const colors = [
             '#00f2ff', '#7000ff', '#ff0055',
             '#00ff88', '#ffaa00', '#ffff00',
@@ -295,6 +315,19 @@
         let isAcceptingInput = false;
         const segmentMap = {};
         let beams = [];
+        const bgDigitsEl = document.getElementById('bg-digits');
+
+        function updateBgDigits(length) {
+            if (length === 0) {
+                bgDigitsEl.innerText = "";
+                return;
+            }
+            let str = piSequence.slice(0, length).join('');
+            if (length > 1) {
+                str = str.slice(0, 1) + '.' + str.slice(1);
+            }
+            bgDigitsEl.innerText = str;
+        }
 
         function resize() {
             canvas.width = container.offsetWidth;
@@ -452,6 +485,7 @@
             actionBtn.disabled = true;
             statusText.innerText = "TRANSMITTING";
             statusText.style.color = "var(--secondary)";
+            updateBgDigits(0);
 
             await sleep(800);
 
@@ -459,10 +493,12 @@
                 const digit = piSequence[i];
                 if (i > 0) createBeam(piSequence[i-1], digit);
                 playNote(digit);
+                updateBgDigits(i + 1);
                 await sleep(550);
             }
 
             playerIdx = 0;
+            updateBgDigits(0);
             isAcceptingInput = true;
             statusText.innerText = "YOUR TURN";
             statusText.style.color = "var(--accent)";
@@ -476,9 +512,10 @@
                 if (playerIdx > 0) createBeam(piSequence[playerIdx-1], digit);
                 playNote(digit, 250);
                 playerIdx++;
+                updateBgDigits(playerIdx);
 
                 if (playerIdx === currentLevel) {
-                    if (currentLevel === 9) {
+                    if (currentLevel === 30) {
                         winGame();
                     } else {
                         currentLevel++;
@@ -511,7 +548,7 @@
 
         function winGame() {
             isAcceptingInput = false;
-            progressEl.innerText = "9/9";
+            progressEl.innerText = "30/30";
             showModal("PI MASTERED", "Numerical synchronization complete. You are one with the circle.");
         }
 
@@ -534,6 +571,7 @@
             statusText.innerText = "SYSTEM IDLE";
             statusText.style.color = "var(--accent)";
             beams = [];
+            updateBgDigits(0);
         }
 
         function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
@@ -541,6 +579,13 @@
         actionBtn.addEventListener('click', () => {
             initAudio();
             playSequence();
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (!isAcceptingInput) return;
+            if (e.key >= '1' && e.key <= '9') {
+                handleInput(parseInt(e.key, 10));
+            }
         });
     </script>
 </body>
