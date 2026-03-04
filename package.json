@@ -5,8 +5,22 @@
   "type": "module",
   "main": "app.js",
   "dependencies": {
-    "puppeteer": "^24.34.0",
+    "puppeteer": "^24.38.0",
     "sparkjs": "^0.1.0",
     "three": "^0.162.0"
-  }
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jonmrjr/notaspoon.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jonmrjr/notaspoon/issues"
+  },
+  "homepage": "https://github.com/jonmrjr/notaspoon#readme"
 }
